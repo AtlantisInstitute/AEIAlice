@@ -25,6 +25,9 @@ intents.guilds = True  # Enable guild join/leave events
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Global flag to track if Confluence link has been posted this session
+confluence_link_posted = False
+
 async def find_status_channel(guild):
     """Find a suitable channel to send status messages."""
     # Try system channel first, then general channel, then the first text channel
@@ -42,19 +45,11 @@ async def find_status_channel(guild):
                 return ch
     return None
 
-@bot.event
-async def on_ready():
-    """Called when the bot is ready and connected to Discord."""
-    logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
-    logger.info(f'Connected to {len(bot.guilds)} server(s)')
-
-    # Send online message and Confluence link to each guild
+async def post_confluence_link():
+    """Post the Confluence project link to all guilds."""
     for guild in bot.guilds:
         channel = await find_status_channel(guild)
         if channel:
-            # Send online message
-            await channel.send("🟢 **Alice Synthesis 30 is now online!** Ready to assist Atlantis Institute with AI-powered administration. 🤖")
-
             # Send and pin Confluence project link
             confluence_message = await channel.send(
                 "📋 **Atlantis Institute Project Documentation**\n"
@@ -71,7 +66,26 @@ async def on_ready():
             except Exception as e:
                 logger.warning(f'Error pinning Confluence link: {e}')
 
-            logger.info(f'Sent online message and Confluence link to #{channel.name} in {guild.name}')
+            logger.info(f'Posted Confluence link to #{channel.name} in {guild.name}')
+
+@bot.event
+async def on_ready():
+    """Called when the bot is ready and connected to Discord."""
+    logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
+    logger.info(f'Connected to {len(bot.guilds)} server(s)')
+
+    # Send online message to each guild
+    for guild in bot.guilds:
+        channel = await find_status_channel(guild)
+        if channel:
+            await channel.send("🟢 **Alice Synthesis 30 is now online!** Ready to assist Atlantis Institute with AI-powered administration. 🤖")
+            logger.info(f'Sent online message to #{channel.name} in {guild.name}')
+
+    # Post Confluence link once per session (not on every reconnect)
+    global confluence_link_posted
+    if not confluence_link_posted:
+        await post_confluence_link()
+        confluence_link_posted = True
 
     # Set a custom status
     await bot.change_presence(
@@ -161,10 +175,25 @@ async def docs(ctx):
         "*Access all project documentation, requirements, and resources here.*"
     )
 
+@bot.command(name='pin-docs', aliases=['pin-confluence'], help='Post and pin the project documentation link (admin only)')
+async def pin_docs(ctx):
+    """Post and pin the Confluence project documentation link."""
+    # Check if user has manage messages permission
+    if not ctx.author.guild_permissions.manage_messages:
+        await ctx.send("❌ You need 'Manage Messages' permission to use this command.")
+        return
+
+    global confluence_link_posted
+    confluence_link_posted = True  # Mark as posted to avoid duplicate posting
+    await post_confluence_link()
+    await ctx.send("✅ Project documentation link posted and pinned!")
+
 def main():
     """Main function to run the bot."""
+    global confluence_link_posted
     try:
         logger.info('Starting Alice bot...')
+        confluence_link_posted = False  # Reset flag on startup
         bot.run(config.DISCORD_TOKEN)
     except discord.LoginFailure:
         logger.error('Failed to login. Please check your token in config.py')
@@ -172,6 +201,7 @@ def main():
         logger.error(f'An error occurred: {e}')
         logger.info('If you see SSL certificate errors, try running with: export SSL_CERT_FILE=/etc/ssl/cert.pem')
     finally:
+        confluence_link_posted = False  # Reset flag on shutdown
         logger.info('Alice bot stopped.')
 
 if __name__ == '__main__':
