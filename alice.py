@@ -25,11 +25,35 @@ intents.guilds = True  # Enable guild join/leave events
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+async def find_status_channel(guild):
+    """Find a suitable channel to send status messages."""
+    # Try system channel first, then general channel, then the first text channel
+    if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+        return guild.system_channel
+    else:
+        # Look for a general channel
+        for ch in guild.text_channels:
+            if ch.name.lower() in ['general', 'main', 'lobby', 'chat'] and ch.permissions_for(guild.me).send_messages:
+                return ch
+
+        # If no general channel found, use the first text channel the bot can send to
+        for ch in guild.text_channels:
+            if ch.permissions_for(guild.me).send_messages:
+                return ch
+    return None
+
 @bot.event
 async def on_ready():
     """Called when the bot is ready and connected to Discord."""
     logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
+
+    # Send online message to each guild
+    for guild in bot.guilds:
+        channel = await find_status_channel(guild)
+        if channel:
+            await channel.send("🟢 **Alice Synthesis 30 is now online!** Ready to assist Atlantis Institute with AI-powered administration. 🤖")
+            logger.info(f'Sent online message to #{channel.name} in {guild.name}')
 
     # Set a custom status
     await bot.change_presence(
@@ -81,6 +105,23 @@ async def on_guild_join(guild):
         logger.info(f'Sent intro message to #{channel.name} in {guild.name}')
     else:
         logger.warning(f'Could not find a suitable channel to send intro message in {guild.name}')
+
+@bot.event
+async def on_disconnect():
+    """Called when the bot disconnects from Discord."""
+    logger.info('Alice is disconnecting...')
+
+    # Try to send offline messages to guilds before disconnecting
+    # Note: This may not always work as the bot is disconnecting
+    try:
+        for guild in bot.guilds:
+            channel = await find_status_channel(guild)
+            if channel:
+                await channel.send("🔴 **Alice Synthesis 30 is going offline.** AI systems powering down. See you next time! 👋")
+                logger.info(f'Sent offline message to #{channel.name} in {guild.name}')
+    except Exception as e:
+        logger.warning(f'Could not send offline messages: {e}')
+        logger.info('Alice disconnected without sending offline messages')
 
 @bot.command(name='hello', help='Say hello to Alice!')
 async def hello(ctx):
