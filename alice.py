@@ -48,12 +48,30 @@ async def on_ready():
     logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
 
-    # Send online message to each guild
+    # Send online message and Confluence link to each guild
     for guild in bot.guilds:
         channel = await find_status_channel(guild)
         if channel:
+            # Send online message
             await channel.send("🟢 **Alice Synthesis 30 is now online!** Ready to assist Atlantis Institute with AI-powered administration. 🤖")
-            logger.info(f'Sent online message to #{channel.name} in {guild.name}')
+
+            # Send and pin Confluence project link
+            confluence_message = await channel.send(
+                "📋 **Atlantis Institute Project Documentation**\n"
+                "🔗 https://atlantisinstitute.atlassian.net/wiki/x/DgCUD\n"
+                "📌 *This link has been pinned for easy access to project documentation.*"
+            )
+
+            # Pin the message
+            try:
+                await confluence_message.pin()
+                logger.info(f'Pinned Confluence link in #{channel.name} in {guild.name}')
+            except discord.Forbidden:
+                logger.warning(f'Could not pin Confluence link in #{channel.name} - missing permissions')
+            except Exception as e:
+                logger.warning(f'Error pinning Confluence link: {e}')
+
+            logger.info(f'Sent online message and Confluence link to #{channel.name} in {guild.name}')
 
     # Set a custom status
     await bot.change_presence(
@@ -133,6 +151,15 @@ async def ping(ctx):
     """Check the bot's response time."""
     latency = round(bot.latency * 1000)  # Convert to milliseconds
     await ctx.send(f'Pong! Latency: {latency}ms')
+
+@bot.command(name='docs', aliases=['confluence', 'project'], help='Get Atlantis Institute project documentation link')
+async def docs(ctx):
+    """Send the Atlantis Institute Confluence project documentation link."""
+    await ctx.send(
+        "📋 **Atlantis Institute Project Documentation**\n"
+        "🔗 https://atlantisinstitute.atlassian.net/wiki/x/DgCUD\n"
+        "*Access all project documentation, requirements, and resources here.*"
+    )
 
 def main():
     """Main function to run the bot."""
