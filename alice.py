@@ -74,13 +74,6 @@ async def on_ready():
     logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
 
-    # Send online message to each guild
-    for guild in bot.guilds:
-        channel = await find_status_channel(guild)
-        if channel:
-            await channel.send("🟢 **Alice Synthesis 30 is now online!** Ready to assist Atlantis Institute with AI-powered administration. 🤖")
-            logger.info(f'Sent online message to #{channel.name} in {guild.name}')
-
     # Post Confluence link once per session (not on every reconnect)
     global confluence_link_posted
     if not confluence_link_posted:
@@ -137,23 +130,6 @@ async def on_guild_join(guild):
         logger.info(f'Sent intro message to #{channel.name} in {guild.name}')
     else:
         logger.warning(f'Could not find a suitable channel to send intro message in {guild.name}')
-
-@bot.event
-async def on_disconnect():
-    """Called when the bot disconnects from Discord."""
-    logger.info('Alice is disconnecting...')
-
-    # Try to send offline messages to guilds before disconnecting
-    # Note: This may not always work as the bot is disconnecting
-    try:
-        for guild in bot.guilds:
-            channel = await find_status_channel(guild)
-            if channel:
-                await channel.send("🔴 **Alice Synthesis 30 is going offline.** AI systems powering down. See you next time! 👋")
-                logger.info(f'Sent offline message to #{channel.name} in {guild.name}')
-    except Exception as e:
-        logger.warning(f'Could not send offline messages: {e}')
-        logger.info('Alice disconnected without sending offline messages')
 
 @bot.command(name='hello', help='Say hello to Alice!')
 async def hello(ctx):
