@@ -102,6 +102,7 @@ def main():
         logger.error('Failed to login. Please check your token in config.py')
     except Exception as e:
         logger.error(f'An error occurred: {e}')
+        logger.info('If you see SSL certificate errors, try running with: export SSL_CERT_FILE=/etc/ssl/cert.pem')
     finally:
         logger.info('Alice bot stopped.')
 
