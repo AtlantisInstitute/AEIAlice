@@ -75,7 +75,7 @@ async def on_guild_join(guild):
                     break
 
     if channel:
-        intro_message = ("Hello, my name is Alice Synthesis 30 and I am the news AI assitant administrator "
+        intro_message = ("Hello, my name is Alice Synthesis 30 and I am the new AI assitant administrator "
                         "for Atlantis Institute and will update the team on here with all git commits done on Atlantis Eons")
         await channel.send(intro_message)
         logger.info(f'Sent intro message to #{channel.name} in {guild.name}')
