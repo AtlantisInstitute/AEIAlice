@@ -25,60 +25,11 @@ intents.guilds = True  # Enable guild join/leave events
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Global flag to track if Confluence link has been posted this session
-confluence_link_posted = False
-
-async def find_status_channel(guild):
-    """Find a suitable channel to send status messages."""
-    # Try system channel first, then general channel, then the first text channel
-    if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
-        return guild.system_channel
-    else:
-        # Look for a general channel
-        for ch in guild.text_channels:
-            if ch.name.lower() in ['general', 'main', 'lobby', 'chat'] and ch.permissions_for(guild.me).send_messages:
-                return ch
-
-        # If no general channel found, use the first text channel the bot can send to
-        for ch in guild.text_channels:
-            if ch.permissions_for(guild.me).send_messages:
-                return ch
-    return None
-
-async def post_confluence_link():
-    """Post the Confluence project link to all guilds."""
-    for guild in bot.guilds:
-        channel = await find_status_channel(guild)
-        if channel:
-            # Send and pin Confluence project link
-            confluence_message = await channel.send(
-                "📋 **Atlantis Institute Project Documentation**\n"
-                "🔗 https://atlantisinstitute.atlassian.net/wiki/x/DgCUD\n"
-                "📌 *This link has been pinned for easy access to project documentation.*"
-            )
-
-            # Pin the message
-            try:
-                await confluence_message.pin()
-                logger.info(f'Pinned Confluence link in #{channel.name} in {guild.name}')
-            except discord.Forbidden:
-                logger.warning(f'Could not pin Confluence link in #{channel.name} - missing permissions')
-            except Exception as e:
-                logger.warning(f'Error pinning Confluence link: {e}')
-
-            logger.info(f'Posted Confluence link to #{channel.name} in {guild.name}')
-
 @bot.event
 async def on_ready():
     """Called when the bot is ready and connected to Discord."""
     logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
-
-    # Post Confluence link once per session (not on every reconnect)
-    global confluence_link_posted
-    if not confluence_link_posted:
-        await post_confluence_link()
-        confluence_link_posted = True
 
     # Set a custom status
     await bot.change_presence(
@@ -142,34 +93,11 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert to milliseconds
     await ctx.send(f'Pong! Latency: {latency}ms')
 
-@bot.command(name='docs', aliases=['confluence', 'project'], help='Get Atlantis Institute project documentation link')
-async def docs(ctx):
-    """Send the Atlantis Institute Confluence project documentation link."""
-    await ctx.send(
-        "📋 **Atlantis Institute Project Documentation**\n"
-        "🔗 https://atlantisinstitute.atlassian.net/wiki/x/DgCUD\n"
-        "*Access all project documentation, requirements, and resources here.*"
-    )
-
-@bot.command(name='pin-docs', aliases=['pin-confluence'], help='Post and pin the project documentation link (admin only)')
-async def pin_docs(ctx):
-    """Post and pin the Confluence project documentation link."""
-    # Check if user has manage messages permission
-    if not ctx.author.guild_permissions.manage_messages:
-        await ctx.send("❌ You need 'Manage Messages' permission to use this command.")
-        return
-
-    global confluence_link_posted
-    confluence_link_posted = True  # Mark as posted to avoid duplicate posting
-    await post_confluence_link()
-    await ctx.send("✅ Project documentation link posted and pinned!")
 
 def main():
     """Main function to run the bot."""
-    global confluence_link_posted
     try:
         logger.info('Starting Alice bot...')
-        confluence_link_posted = False  # Reset flag on startup
         bot.run(config.DISCORD_TOKEN)
     except discord.LoginFailure:
         logger.error('Failed to login. Please check your token in config.py')
@@ -177,7 +105,6 @@ def main():
         logger.error(f'An error occurred: {e}')
         logger.info('If you see SSL certificate errors, try running with: export SSL_CERT_FILE=/etc/ssl/cert.pem')
     finally:
-        confluence_link_posted = False  # Reset flag on shutdown
         logger.info('Alice bot stopped.')
 
 if __name__ == '__main__':
