@@ -20,6 +20,7 @@ logger = logging.getLogger('Alice')
 intents = discord.Intents.default()
 intents.message_content = True  # Enable reading message content
 intents.members = True  # Enable member-related events
+intents.guilds = True  # Enable guild join/leave events
 
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -47,6 +48,39 @@ async def on_message(message):
 
     # Process commands
     await bot.process_commands(message)
+
+@bot.event
+async def on_guild_join(guild):
+    """Called when the bot joins a new guild (server)."""
+    logger.info(f'Alice has joined a new guild: {guild.name} (ID: {guild.id})')
+
+    # Find a suitable channel to send the intro message
+    # Try system channel first, then general channel, then the first text channel
+    channel = None
+
+    if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+        channel = guild.system_channel
+    else:
+        # Look for a general channel
+        for ch in guild.text_channels:
+            if ch.name.lower() in ['general', 'main', 'lobby', 'chat'] and ch.permissions_for(guild.me).send_messages:
+                channel = ch
+                break
+
+        # If no general channel found, use the first text channel the bot can send to
+        if not channel:
+            for ch in guild.text_channels:
+                if ch.permissions_for(guild.me).send_messages:
+                    channel = ch
+                    break
+
+    if channel:
+        intro_message = ("Hello, my name is Alice Synthesis 30 and I am the news AI assitant administrator "
+                        "for Atlantis Institute and will update the team on here with all git commits done on Atlantis Eons")
+        await channel.send(intro_message)
+        logger.info(f'Sent intro message to #{channel.name} in {guild.name}')
+    else:
+        logger.warning(f'Could not find a suitable channel to send intro message in {guild.name}')
 
 @bot.command(name='hello', help='Say hello to Alice!')
 async def hello(ctx):
