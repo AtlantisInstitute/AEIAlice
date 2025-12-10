@@ -13,6 +13,13 @@ import sys
 import signal
 import psutil
 import atexit
+import threading
+import asyncio
+
+# Import integration modules
+from notification_manager import init_notification_manager
+from webhook_handler import webhook_handler
+from task_scheduler import task_scheduler
 
 # Set up logging
 logging.basicConfig(
@@ -66,9 +73,24 @@ def cleanup_pid_file():
     except Exception as e:
         logger.warning(f'Could not remove PID file: {e}')
 
+def stop_integrations():
+    """Stop all integration services."""
+    logger.info('Stopping integrations...')
+
+    # Stop task scheduler
+    if task_scheduler:
+        task_scheduler.stop()
+
+    logger.info('Integrations stopped')
+
 def signal_handler(signum, frame):
     """Handle termination signals gracefully."""
     logger.info(f'Received signal {signum}, shutting down Alice...')
+
+    # Stop task scheduler
+    if task_scheduler:
+        task_scheduler.stop()
+
     kill_all_alice_instances()
     cleanup_pid_file()
     sys.exit(0)
@@ -82,9 +104,15 @@ intents.guilds = True  # Enable guild join/leave events
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Global variables for integrations
+notification_manager = None
+webhook_thread = None
+
 @bot.event
 async def on_ready():
     """Called when the bot is ready and connected to Discord."""
+    global notification_manager, webhook_thread
+
     logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
 
@@ -92,8 +120,43 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name="over Atlantis Institute"
+            name="over Atlantis Institute integrations"
         )
+    )
+
+    # Initialize notification manager
+    notification_manager = init_notification_manager(bot)
+
+    # Setup webhook handler
+    webhook_handler.set_notification_manager(notification_manager)
+    webhook_handler.set_event_loop(asyncio.get_event_loop())
+
+    # Start webhook server in background thread
+    webhook_thread = threading.Thread(
+        target=webhook_handler.run,
+        daemon=True,
+        name="WebhookServer"
+    )
+    webhook_thread.start()
+    logger.info("Webhook server started")
+
+    # Setup and start task scheduler
+    task_scheduler.set_notification_manager(notification_manager)
+    await task_scheduler.start()
+    logger.info("Task scheduler started")
+
+    # Send startup notification
+    await notification_manager.send_general_notification(
+        "🚀 Alice is Online",
+        "🤖 Alice Synthesis 30 is now monitoring your Jira and GitHub integrations!\n\n"
+        "**Active Integrations:**\n"
+        "• Jira task monitoring\n"
+        "• GitHub PR/issue monitoring\n"
+        "• Webhook support for real-time notifications\n\n"
+        "**Webhook Endpoints:**\n"
+        f"• GitHub: `http://your-server:{config.WEBHOOK_CONFIG['port']}{config.WEBHOOK_CONFIG['path']}/github`\n"
+        f"• Jira: `http://your-server:{config.WEBHOOK_CONFIG['port']}{config.WEBHOOK_CONFIG['path']}/jira`",
+        discord.Color.green()
     )
 
 @bot.event
@@ -150,6 +213,123 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert to milliseconds
     await ctx.send(f'Pong! Latency: {latency}ms')
 
+@bot.command(name='integrations', help='Check integration status')
+async def integrations_status(ctx):
+    """Show the status of all integrations."""
+    embed = discord.Embed(
+        title="🤖 Alice Integration Status",
+        color=discord.Color.blue(),
+        timestamp=discord.utils.utcnow()
+    )
+
+    # Jira status
+    try:
+        from jira_integration import jira_integration
+        jira_connected = jira_integration.connect()
+        embed.add_field(
+            name="📋 Jira Integration",
+            value=f"Status: {'✅ Connected' if jira_connected else '❌ Disconnected'}\n"
+                  f"Project: {config.JIRA_CONFIG['project_key']}\n"
+                  f"Server: {config.JIRA_CONFIG['server']}",
+            inline=False
+        )
+    except Exception as e:
+        embed.add_field(
+            name="📋 Jira Integration",
+            value=f"Status: ❌ Error\nError: {str(e)}",
+            inline=False
+        )
+
+    # GitHub status
+    try:
+        from github_integration import github_integration
+        github_connected = github_integration.connect()
+        repos = ', '.join([repo.split('/')[-1] for repo in config.GITHUB_CONFIG['repos']])
+        embed.add_field(
+            name="🐙 GitHub Integration",
+            value=f"Status: {'✅ Connected' if github_connected else '❌ Disconnected'}\n"
+                  f"Repos: {repos}",
+            inline=False
+        )
+    except Exception as e:
+        embed.add_field(
+            name="🐙 GitHub Integration",
+            value=f"Status: ❌ Error\nError: {str(e)}",
+            inline=False
+        )
+
+    # Webhook status
+    embed.add_field(
+        name="🔗 Webhook Server",
+        value=f"Status: ✅ Running\n"
+              f"Port: {config.WEBHOOK_CONFIG['port']}\n"
+              f"Path: {config.WEBHOOK_CONFIG['path']}",
+        inline=False
+    )
+
+    # Scheduler status
+    scheduler_status = "✅ Running" if task_scheduler.scheduler.running else "❌ Stopped"
+    embed.add_field(
+        name="⏰ Task Scheduler",
+        value=f"Status: {scheduler_status}\n"
+              f"Jira polling: Every {config.POLLING_INTERVALS['jira']}s\n"
+              f"GitHub polling: Every {config.POLLING_INTERVALS['github']}s",
+        inline=False
+    )
+
+    await ctx.send(embed=embed)
+
+@bot.command(name='check', help='Manually trigger integration checks')
+@commands.has_permissions(administrator=True)
+async def manual_check(ctx):
+    """Manually trigger checks for all integrations."""
+    await ctx.send("🔄 Starting manual integration checks...")
+
+    # Check Jira
+    await ctx.send("📋 Checking Jira for updates...")
+    await task_scheduler.check_jira_updates()
+
+    # Check GitHub
+    await ctx.send("🐙 Checking GitHub for updates...")
+    await task_scheduler.check_github_updates()
+
+    await ctx.send("✅ Manual checks completed!")
+
+@bot.command(name='webhook', help='Get webhook endpoint URLs')
+@commands.has_permissions(administrator=True)
+async def webhook_info(ctx):
+    """Show webhook endpoint information for setup."""
+    embed = discord.Embed(
+        title="🔗 Webhook Configuration",
+        description="Use these URLs to configure webhooks in your external services:",
+        color=discord.Color.blue()
+    )
+
+    base_url = f"http://your-server:{config.WEBHOOK_CONFIG['port']}{config.WEBHOOK_CONFIG['path']}"
+
+    embed.add_field(
+        name="🐙 GitHub Webhook",
+        value=f"```\n{base_url}/github\n```"
+              "**GitHub Settings:**\n"
+              "• Content type: `application/json`\n"
+              "• Events: Pull requests, Issues\n"
+              "• Secret: Configure in config.py",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📋 Jira Webhook",
+        value=f"```\n{base_url}/jira\n```"
+              "**Jira Settings:**\n"
+              "• Events: Issue created, Issue updated\n"
+              "• Secret: Configure in config.py",
+        inline=False
+    )
+
+    embed.set_footer(text="Replace 'your-server' with your actual server address or domain")
+
+    await ctx.send(embed=embed)
+
 
 def main():
     """Main function to run the bot."""
@@ -160,6 +340,7 @@ def main():
     # Register cleanup function
     atexit.register(cleanup_pid_file)
     atexit.register(kill_all_alice_instances)
+    atexit.register(stop_integrations)
     
     # Ensure single instance
     check_single_instance()

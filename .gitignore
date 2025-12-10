@@ -113,6 +113,8 @@ dmypy.json
 
 # Discord bot configuration (contains sensitive token)
 config.py
+# Keep the example config file
+!config.example.py
 
 # Alice bot PID file
 alice.pid
