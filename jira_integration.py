@@ -4,7 +4,7 @@ Handles monitoring Jira projects for new and completed tasks.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from jira import JIRA
 from jira.exceptions import JIRAError
@@ -15,7 +15,8 @@ logger = logging.getLogger('Alice.Jira')
 class JiraIntegration:
     def __init__(self):
         self.jira = None
-        self.last_check = datetime.now() - timedelta(hours=1)  # Start with 1 hour ago
+        # Use timezone-aware datetime for proper comparison with Jira timestamps
+        self.last_check = datetime.now(timezone.utc) - timedelta(hours=1)  # Start with 1 hour ago
         self.known_issues = set()  # Track known issue keys to detect new ones
 
     def connect(self) -> bool:
@@ -76,7 +77,7 @@ class JiraIntegration:
 
     def get_new_issues(self) -> List[Dict]:
         """Get issues that were created since the last check."""
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         hours_back = max(1, int((current_time - self.last_check).total_seconds() / 3600) + 1)
 
         recent_issues = self.get_recent_issues(hours_back)

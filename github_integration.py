@@ -4,7 +4,7 @@ Handles monitoring GitHub repositories for PRs and issues.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from github import Github
 from github.GithubException import GithubException
@@ -15,7 +15,8 @@ logger = logging.getLogger('Alice.GitHub')
 class GitHubIntegration:
     def __init__(self):
         self.github = None
-        self.last_check = datetime.now() - timedelta(hours=1)  # Start with 1 hour ago
+        # Use timezone-aware datetime for proper comparison
+        self.last_check = datetime.now(timezone.utc) - timedelta(hours=1)  # Start with 1 hour ago
         self.known_prs = set()  # Track known PR numbers
         self.known_issues = set()  # Track known issue numbers
 
@@ -114,7 +115,7 @@ class GitHubIntegration:
 
     def get_new_prs(self) -> List[Dict]:
         """Get PRs that were created since the last check."""
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         hours_back = max(1, int((current_time - self.last_check).total_seconds() / 3600) + 1)
 
         recent_prs = self.get_recent_prs(hours_back)
@@ -132,7 +133,7 @@ class GitHubIntegration:
 
     def get_new_issues(self) -> List[Dict]:
         """Get issues that were created since the last check."""
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         hours_back = max(1, int((current_time - self.last_check).total_seconds() / 3600) + 1)
 
         recent_issues = self.get_recent_issues(hours_back)
