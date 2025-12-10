@@ -125,15 +125,16 @@ class TaskScheduler:
         )
         logger.info(f"Scheduled GitHub polling every {github_interval} seconds")
 
-        # Status update job (daily)
-        self.scheduler.add_job(
-            self.send_status_update,
-            trigger=IntervalTrigger(hours=24),
-            id='status_update',
-            name='Daily Status Update',
-            max_instances=1
-        )
-        logger.info("Scheduled daily status updates")
+        # Status update job (daily) - Disabled to avoid chat spam
+        # Users can check bot status using !integrations command
+        # self.scheduler.add_job(
+        #     self.send_status_update,
+        #     trigger=IntervalTrigger(hours=24),
+        #     id='status_update',
+        #     name='Daily Status Update',
+        #     max_instances=1
+        # )
+        # logger.info("Scheduled daily status updates")
 
     async def start(self):
         """Start the scheduler."""
@@ -144,8 +145,8 @@ class TaskScheduler:
         self.scheduler.start()
         logger.info("Task scheduler started")
 
-        # Send initial status message
-        await self.send_status_update()
+        # Initial status message disabled to avoid chat spam
+        # await self.send_status_update()
 
     def stop(self):
         """Stop the scheduler."""

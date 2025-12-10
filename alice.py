@@ -145,19 +145,8 @@ async def on_ready():
     await task_scheduler.start()
     logger.info("Task scheduler started")
 
-    # Send startup notification
-    await notification_manager.send_general_notification(
-        "🚀 Alice is Online",
-        "🤖 Alice Synthesis 30 is now monitoring your Jira and GitHub integrations!\n\n"
-        "**Active Integrations:**\n"
-        "• Jira task monitoring\n"
-        "• GitHub PR/issue monitoring\n"
-        "• Webhook support for real-time notifications\n\n"
-        "**Webhook Endpoints:**\n"
-        f"• GitHub: `http://your-server:{config.WEBHOOK_CONFIG['port']}{config.WEBHOOK_CONFIG['path']}/github`\n"
-        f"• Jira: `http://your-server:{config.WEBHOOK_CONFIG['port']}{config.WEBHOOK_CONFIG['path']}/jira`",
-        discord.Color.green()
-    )
+    # Startup notification removed to avoid chat spam
+    # Bot status can be checked using !integrations command
 
 @bot.event
 async def on_message(message):
