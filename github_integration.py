@@ -49,7 +49,7 @@ class GitHubIntegration:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get PRs updated recently
-                since = datetime.now() - timedelta(hours=hours_back)
+                since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
                 prs = repo.get_pulls(state='all', sort='updated', direction='desc')
 
                 for pr in prs:
@@ -86,7 +86,7 @@ class GitHubIntegration:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get issues updated recently (excluding PRs)
-                since = datetime.now() - timedelta(hours=hours_back)
+                since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
                 issues = repo.get_issues(state='all', sort='updated', direction='desc', since=since)
 
                 for issue in issues:
@@ -262,7 +262,7 @@ class GitHubIntegration:
 
     def update_last_check(self):
         """Update the last check timestamp."""
-        self.last_check = datetime.now()
+        self.last_check = datetime.now(timezone.utc)
 
     def format_pr_notification(self, pr: Dict, event_type: str) -> str:
         """Format a Discord notification message for a GitHub PR."""
