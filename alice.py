@@ -8,6 +8,11 @@ import discord
 from discord.ext import commands
 import config
 import logging
+import os
+import sys
+import signal
+import psutil
+import atexit
 
 # Set up logging
 logging.basicConfig(
@@ -15,6 +20,58 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('Alice')
+
+# PID file location
+PID_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alice.pid')
+
+def kill_all_alice_instances():
+    """Kill all running Alice bot instances."""
+    current_pid = os.getpid()
+    killed_count = 0
+    
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            cmdline = proc.info.get('cmdline', [])
+            if cmdline and 'alice.py' in ' '.join(cmdline).lower():
+                if proc.info['pid'] != current_pid:
+                    logger.info(f"Killing old Alice instance (PID: {proc.info['pid']})")
+                    proc.kill()
+                    killed_count += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    
+    if killed_count > 0:
+        logger.info(f"Killed {killed_count} old Alice instance(s)")
+    return killed_count
+
+def check_single_instance():
+    """Ensure only one instance of Alice is running."""
+    # Kill any existing instances first
+    kill_all_alice_instances()
+    
+    # Create PID file with current process ID
+    try:
+        with open(PID_FILE, 'w') as f:
+            f.write(str(os.getpid()))
+        logger.info(f'PID file created: {PID_FILE}')
+    except Exception as e:
+        logger.warning(f'Could not create PID file: {e}')
+
+def cleanup_pid_file():
+    """Remove the PID file on exit."""
+    try:
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
+            logger.info('PID file removed')
+    except Exception as e:
+        logger.warning(f'Could not remove PID file: {e}')
+
+def signal_handler(signum, frame):
+    """Handle termination signals gracefully."""
+    logger.info(f'Received signal {signum}, shutting down Alice...')
+    kill_all_alice_instances()
+    cleanup_pid_file()
+    sys.exit(0)
 
 # Bot setup with intents
 intents = discord.Intents.default()
@@ -96,15 +153,31 @@ async def ping(ctx):
 
 def main():
     """Main function to run the bot."""
+    # Set up signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Register cleanup function
+    atexit.register(cleanup_pid_file)
+    atexit.register(kill_all_alice_instances)
+    
+    # Ensure single instance
+    check_single_instance()
+    
     try:
         logger.info('Starting Alice bot...')
         bot.run(config.DISCORD_TOKEN)
     except discord.LoginFailure:
         logger.error('Failed to login. Please check your token in config.py')
+    except KeyboardInterrupt:
+        logger.info('Keyboard interrupt received, shutting down...')
     except Exception as e:
         logger.error(f'An error occurred: {e}')
         logger.info('If you see SSL certificate errors, try running with: export SSL_CERT_FILE=/etc/ssl/cert.pem')
     finally:
+        logger.info('Cleaning up and shutting down Alice...')
+        kill_all_alice_instances()
+        cleanup_pid_file()
         logger.info('Alice bot stopped.')
 
 if __name__ == '__main__':
