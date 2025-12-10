@@ -16,7 +16,8 @@ class JiraIntegration:
     def __init__(self):
         self.jira = None
         # Use timezone-aware datetime for proper comparison with Jira timestamps
-        self.last_check = datetime.now(timezone.utc) - timedelta(hours=1)  # Start with 1 hour ago
+        # Start from current time to avoid duplicate notifications on restart
+        self.last_check = datetime.now(timezone.utc)
         self.known_issues = set()  # Track known issue keys to detect new ones
 
     def connect(self) -> bool:

@@ -16,7 +16,8 @@ class GitHubIntegration:
     def __init__(self):
         self.github = None
         # Use timezone-aware datetime for proper comparison
-        self.last_check = datetime.now(timezone.utc) - timedelta(hours=1)  # Start with 1 hour ago
+        # Start from current time to avoid duplicate notifications on restart
+        self.last_check = datetime.now(timezone.utc)
         self.known_prs = set()  # Track known PR numbers
         self.known_issues = set()  # Track known issue numbers
         self.known_commits = set()  # Track known commit SHAs
