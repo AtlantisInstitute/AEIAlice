@@ -82,6 +82,12 @@ class NotificationManager:
         message = github_integration.format_issue_notification(issue_data, 'closed')
         return await self.send_to_channel('github', message)
 
+    async def notify_github_new_commit(self, commit_data: dict):
+        """Send notification for new GitHub commit."""
+        from github_integration import github_integration
+        message = github_integration.format_commit_notification(commit_data)
+        return await self.send_to_channel('github', message)
+
     async def send_general_notification(self, title: str, message: str, color: discord.Color = discord.Color.blue()):
         """Send a general notification with an embed."""
         embed = discord.Embed(

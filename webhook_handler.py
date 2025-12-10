@@ -120,6 +120,8 @@ class WebhookHandler:
                 await self._handle_github_pr_event(data)
             elif event_type == 'issues':
                 await self._handle_github_issue_event(data)
+            elif event_type == 'push':
+                await self._handle_github_push_event(data)
             elif event_type == 'ping':
                 logger.info("Received GitHub webhook ping")
             else:
@@ -184,6 +186,32 @@ class WebhookHandler:
                 'url': issue['html_url'],
             }
             await self.notification_manager.notify_github_issue_closed(issue_data)
+
+    async def _handle_github_push_event(self, data: dict):
+        """Handle GitHub push events."""
+        commits = data.get('commits', [])
+        ref = data.get('ref', '')
+        repo_full_name = data.get('repository', {}).get('full_name', '')
+        
+        # Only process commits to main/master branches
+        if not ref.endswith('/main') and not ref.endswith('/master'):
+            logger.debug(f"Ignoring push to non-main branch: {ref}")
+            return
+        
+        # Process each commit in the push
+        for commit in commits:
+            commit_data = {
+                'repo': repo_full_name,
+                'sha': commit['id'][:7],  # Short SHA
+                'full_sha': commit['id'],
+                'message': commit['message'].split('\n')[0][:100],  # First line, truncated
+                'author': commit['author']['name'],
+                'author_username': commit['author'].get('username', commit['author']['name']),
+                'date': commit['timestamp'],
+                'url': commit['url'],
+                'branch': ref.split('/')[-1],
+            }
+            await self.notification_manager.notify_github_new_commit(commit_data)
 
     async def _process_jira_event(self, data: dict):
         """Process Jira webhook event asynchronously."""

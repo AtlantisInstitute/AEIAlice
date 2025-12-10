@@ -75,13 +75,19 @@ class TaskScheduler:
             for issue in closed_issues:
                 await self.notification_manager.notify_github_issue_closed(issue)
 
+            # Check for new commits
+            new_commits = github_integration.get_new_commits()
+            for commit in new_commits:
+                await self.notification_manager.notify_github_new_commit(commit)
+
             # Update last check time
             github_integration.update_last_check()
 
-            total_updates = len(new_prs) + len(closed_prs) + len(new_issues) + len(closed_issues)
+            total_updates = len(new_prs) + len(closed_prs) + len(new_issues) + len(closed_issues) + len(new_commits)
             if total_updates > 0:
                 logger.info(f"GitHub updates: {len(new_prs)} new PRs, {len(closed_prs)} closed PRs, "
-                          f"{len(new_issues)} new issues, {len(closed_issues)} closed issues")
+                          f"{len(new_issues)} new issues, {len(closed_issues)} closed issues, "
+                          f"{len(new_commits)} new commits")
             else:
                 logger.debug("No new GitHub updates found")
 

@@ -19,6 +19,7 @@ class GitHubIntegration:
         self.last_check = datetime.now(timezone.utc) - timedelta(hours=1)  # Start with 1 hour ago
         self.known_prs = set()  # Track known PR numbers
         self.known_issues = set()  # Track known issue numbers
+        self.known_commits = set()  # Track known commit SHAs
 
     def connect(self) -> bool:
         """Connect to GitHub using configuration settings."""
@@ -149,6 +150,46 @@ class GitHubIntegration:
         logger.info(f"Found {len(new_issues)} new GitHub issues")
         return new_issues
 
+    def get_new_commits(self) -> List[Dict]:
+        """Get commits that were pushed since the last check."""
+        if not self.github:
+            if not self.connect():
+                return []
+
+        new_commits = []
+        for repo_name in config.GITHUB_CONFIG['repos']:
+            try:
+                repo = self.github.get_repo(repo_name)
+                # Get commits since last check
+                commits = repo.get_commits(since=self.last_check)
+
+                for commit in commits:
+                    commit_sha = commit.sha
+                    if commit_sha not in self.known_commits:
+                        # Get commit details
+                        commit_data = {
+                            'repo': repo_name,
+                            'sha': commit_sha[:7],  # Short SHA
+                            'full_sha': commit_sha,
+                            'message': commit.commit.message.split('\n')[0][:100],  # First line, truncated
+                            'author': commit.commit.author.name,
+                            'author_username': commit.author.login if commit.author else 'Unknown',
+                            'date': commit.commit.author.date.isoformat(),
+                            'url': commit.html_url,
+                            'branch': 'main',  # Default, we'll try to get the actual branch
+                        }
+                        
+                        new_commits.append(commit_data)
+                        self.known_commits.add(commit_sha)
+
+            except GithubException as e:
+                logger.error(f"Error fetching commits from {repo_name}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error fetching commits from {repo_name}: {e}")
+
+        logger.info(f"Found {len(new_commits)} new GitHub commits")
+        return new_commits
+
     def get_closed_prs(self) -> List[Dict]:
         """Get PRs that were closed/merged since the last check."""
         if not self.github:
@@ -267,6 +308,17 @@ class GitHubIntegration:
 **URL:** {issue['url']}"""
 
         return f"Unknown issue event type: {event_type}"
+
+    def format_commit_notification(self, commit: Dict) -> str:
+        """Format a Discord notification message for a GitHub commit."""
+        repo_name = commit['repo'].split('/')[-1]  # Get repo name without org
+
+        return f"""📝 **New Commit to {repo_name}**
+
+**{commit['sha']}:** {commit['message']}
+**Author:** {commit['author']} (@{commit['author_username']})
+**Date:** {datetime.fromisoformat(commit['date']).strftime('%Y-%m-%d %H:%M UTC')}
+**URL:** {commit['url']}"""
 
 # Global instance
 github_integration = GitHubIntegration()
