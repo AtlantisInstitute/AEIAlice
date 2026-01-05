@@ -2,7 +2,7 @@ discord.py==2.3.2
 python-dotenv==1.0.0
 psutil==5.9.6
 requests==2.31.0
-jira==3.5.2
+jira>=3.8.0
 PyGithub==1.58.2
 flask==2.3.3
 apscheduler==3.10.4

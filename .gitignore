@@ -118,3 +118,6 @@ config.py
 
 # Alice bot PID file
 alice.pid
+
+# macOS
+.DS_Store
