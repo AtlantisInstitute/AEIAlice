@@ -158,7 +158,7 @@ class JiraIntegration:
         if event_type == 'new':
             return f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-**New Jira Task Created**
+🆕 **New Jira Task Created**
 
 **{issue['key']}:** {issue['summary']}
 **Type:** {issue['type']}
@@ -170,7 +170,7 @@ class JiraIntegration:
         elif event_type == 'completed':
             return f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-**Jira Task Completed**
+✅ **Jira Task Completed**
 
 **{issue['key']}:** {issue['summary']}
 **Assignee:** {issue['assignee']}

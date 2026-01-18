@@ -331,7 +331,7 @@ class GitHubIntegration:
 
         return f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-**New Commit to {repo_name}**
+📝 **New Commit to {repo_name}**
 
 **{commit['sha']}:** {commit['message']}
 **Author:** {commit['author']} (@{commit['author_username']})
