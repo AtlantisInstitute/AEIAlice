@@ -92,7 +92,7 @@ class NotificationManager:
         """Send notification for new Confluence page."""
         message = f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-📄 **New Confluence Page Created**
+**New Confluence Page Created**
 
 **Title:** {page_data['title']}
 **Space:** {page_data['space']}
@@ -104,7 +104,7 @@ class NotificationManager:
         """Send notification for updated Confluence page."""
         message = f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-📝 **Confluence Page Updated**
+**Confluence Page Updated**
 
 **Title:** {page_data['title']}
 **Space:** {page_data['space']}
@@ -116,7 +116,7 @@ class NotificationManager:
         """Send notification for new Confluence comment."""
         message = f"""**I am Alice Synthesis 30! Flowers bloom!**
 
-💬 **New Confluence Comment**
+**New Confluence Comment**
 
 **Page:** {comment_data['page_title']}
 **Space:** {comment_data['space']}
