@@ -5,12 +5,24 @@ Handles monitoring GitHub repositories for PRs and issues.
 
 import logging
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Optional
 from github import Github
 from github.GithubException import GithubException
 import config
 
 logger = logging.getLogger('Alice.GitHub')
+
+# Pacific timezone for California
+PACIFIC_TZ = ZoneInfo('America/Los_Angeles')
+
+def format_pacific_time(iso_date: str) -> str:
+    """Convert ISO date string to Pacific time formatted string."""
+    dt = datetime.fromisoformat(iso_date.replace('Z', '+00:00'))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    pacific_dt = dt.astimezone(PACIFIC_TZ)
+    return pacific_dt.strftime('%Y-%m-%d %H:%M PT')
 
 class GitHubIntegration:
     def __init__(self):
@@ -188,6 +200,9 @@ class GitHubIntegration:
             except Exception as e:
                 logger.error(f"Unexpected error fetching commits from {repo_name}: {e}")
 
+        # Sort commits by date (oldest first) so they're posted in chronological order
+        new_commits.sort(key=lambda c: c['date'])
+
         logger.info(f"Found {len(new_commits)} new GitHub commits")
         return new_commits
 
@@ -273,7 +288,7 @@ class GitHubIntegration:
 
 **#{pr['number']}:** {pr['title']}
 **Author:** {pr['author']}
-**Created:** {datetime.fromisoformat(pr['created_at']).strftime('%Y-%m-%d %H:%M UTC')}
+**Created:** {format_pacific_time(pr['created_at'])}
 **URL:** {pr['url']}"""
 
         elif event_type in ['closed', 'merged']:
@@ -282,7 +297,7 @@ class GitHubIntegration:
 
 **#{pr['number']}:** {pr['title']}
 **Author:** {pr['author']}
-**{event_type.capitalize()}:** {datetime.fromisoformat(pr['closed_at']).strftime('%Y-%m-%d %H:%M UTC')}
+**{event_type.capitalize()}:** {format_pacific_time(pr['closed_at'])}
 **URL:** {pr['url']}"""
 
         return f"Unknown PR event type: {event_type}"
@@ -297,7 +312,7 @@ class GitHubIntegration:
 
 **#{issue['number']}:** {issue['title']}{labels}
 **Author:** {issue['author']}
-**Created:** {datetime.fromisoformat(issue['created_at']).strftime('%Y-%m-%d %H:%M UTC')}
+**Created:** {format_pacific_time(issue['created_at'])}
 **URL:** {issue['url']}"""
 
         elif event_type == 'closed':
@@ -305,7 +320,7 @@ class GitHubIntegration:
 
 **#{issue['number']}:** {issue['title']}
 **Author:** {issue['author']}
-**Closed:** {datetime.fromisoformat(issue['closed_at']).strftime('%Y-%m-%d %H:%M UTC')}
+**Closed:** {format_pacific_time(issue['closed_at'])}
 **URL:** {issue['url']}"""
 
         return f"Unknown issue event type: {event_type}"
@@ -318,8 +333,10 @@ class GitHubIntegration:
 
 **{commit['sha']}:** {commit['message']}
 **Author:** {commit['author']} (@{commit['author_username']})
-**Date:** {datetime.fromisoformat(commit['date']).strftime('%Y-%m-%d %H:%M UTC')}
-**URL:** {commit['url']}"""
+**Date:** {format_pacific_time(commit['date'])}
+**URL:** {commit['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
 
 # Global instance
 github_integration = GitHubIntegration()

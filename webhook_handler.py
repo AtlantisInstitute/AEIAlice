@@ -1,6 +1,6 @@
 """
 Webhook Handler for Alice Bot
-Handles incoming webhooks from GitHub and Jira for real-time notifications.
+Handles incoming webhooks from GitHub, Jira, and Confluence for real-time notifications.
 """
 
 import logging
@@ -34,6 +34,10 @@ class WebhookHandler:
         @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/jira", methods=['POST'])
         def jira_webhook():
             return self._handle_jira_webhook()
+
+        @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/confluence", methods=['POST'])
+        def confluence_webhook():
+            return self._handle_confluence_webhook()
 
         @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/health", methods=['GET'])
         def health_check():
@@ -113,6 +117,24 @@ class WebhookHandler:
             logger.error(f"Error processing Jira webhook: {e}")
             return jsonify({"error": "Internal server error"}), 500
 
+    def _handle_confluence_webhook(self):
+        """Handle incoming Confluence webhook."""
+        try:
+            payload = request.get_data()
+            data = json.loads(payload.decode('utf-8'))
+
+            logger.info("Received Confluence webhook")
+
+            # Run async handling in the event loop
+            if self.loop and self.notification_manager:
+                self.loop.create_task(self._process_confluence_event(data))
+
+            return jsonify({"status": "processed"}), 200
+
+        except Exception as e:
+            logger.error(f"Error processing Confluence webhook: {e}")
+            return jsonify({"error": "Internal server error"}), 500
+
     async def _process_github_event(self, event_type: str, data: dict):
         """Process GitHub webhook event asynchronously."""
         try:
@@ -189,17 +211,27 @@ class WebhookHandler:
 
     async def _handle_github_push_event(self, data: dict):
         """Handle GitHub push events."""
+        from github_integration import github_integration
+
         commits = data.get('commits', [])
         ref = data.get('ref', '')
         repo_full_name = data.get('repository', {}).get('full_name', '')
-        
+
         # Only process commits to main/master branches
         if not ref.endswith('/main') and not ref.endswith('/master'):
             logger.debug(f"Ignoring push to non-main branch: {ref}")
             return
-        
-        # Process each commit in the push
+
+        # Process each commit in the push (commits are already in chronological order from GitHub)
         for commit in commits:
+            # Skip if we've already seen this commit (from polling)
+            if commit['id'] in github_integration.known_commits:
+                logger.debug(f"Skipping already known commit: {commit['id'][:7]}")
+                continue
+
+            # Mark as known to prevent duplicate from polling
+            github_integration.known_commits.add(commit['id'])
+
             commit_data = {
                 'repo': repo_full_name,
                 'sha': commit['id'][:7],  # Short SHA
@@ -212,6 +244,7 @@ class WebhookHandler:
                 'branch': ref.split('/')[-1],
             }
             await self.notification_manager.notify_github_new_commit(commit_data)
+            await asyncio.sleep(1)  # Small delay between commit notifications
 
     async def _process_jira_event(self, data: dict):
         """Process Jira webhook event asynchronously."""
@@ -230,10 +263,21 @@ class WebhookHandler:
 
     async def _handle_jira_issue_created(self, data: dict):
         """Handle Jira issue created event."""
+        from jira_integration import jira_integration
+
         issue = data.get('issue', {})
+        issue_key = issue.get('key')
+
+        # Skip if we've already seen this issue
+        if issue_key in jira_integration.known_issues:
+            logger.debug(f"Skipping already known Jira issue: {issue_key}")
+            return
+
+        # Mark as known to prevent duplicates
+        jira_integration.known_issues.add(issue_key)
 
         issue_data = {
-            'key': issue.get('key'),
+            'key': issue_key,
             'summary': issue.get('fields', {}).get('summary'),
             'status': issue.get('fields', {}).get('status', {}).get('name'),
             'assignee': issue.get('fields', {}).get('assignee', {}).get('displayName') if issue.get('fields', {}).get('assignee') else 'Unassigned',
@@ -241,7 +285,7 @@ class WebhookHandler:
             'creator': issue.get('fields', {}).get('creator', {}).get('displayName'),
             'priority': issue.get('fields', {}).get('priority', {}).get('name') if issue.get('fields', {}).get('priority') else 'Not set',
             'type': issue.get('fields', {}).get('issuetype', {}).get('name'),
-            'url': f"{config.JIRA_CONFIG['server']}/browse/{issue.get('key')}"
+            'url': f"{config.JIRA_CONFIG['server']}/browse/{issue_key}"
         }
 
         await self.notification_manager.notify_jira_new_task(issue_data)
@@ -265,6 +309,63 @@ class WebhookHandler:
 
                 await self.notification_manager.notify_jira_task_completed(issue_data)
                 break
+
+    async def _process_confluence_event(self, data: dict):
+        """Process Confluence webhook event asynchronously."""
+        try:
+            event_type = data.get('eventType', '')
+
+            if event_type == 'page_created':
+                await self._handle_confluence_page_created(data)
+            elif event_type == 'page_updated':
+                await self._handle_confluence_page_updated(data)
+            elif event_type == 'comment_created':
+                await self._handle_confluence_comment_created(data)
+            else:
+                logger.debug(f"Ignored Confluence event type: {event_type}")
+
+        except Exception as e:
+            logger.error(f"Error processing Confluence event: {e}")
+
+    async def _handle_confluence_page_created(self, data: dict):
+        """Handle Confluence page created event."""
+        page = data.get('page', {})
+
+        page_data = {
+            'title': page.get('title'),
+            'space': page.get('spaceKey', 'Unknown'),
+            'creator': data.get('userAccountId', 'Unknown'),
+            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+        }
+
+        await self.notification_manager.notify_confluence_page_created(page_data)
+
+    async def _handle_confluence_page_updated(self, data: dict):
+        """Handle Confluence page updated event."""
+        page = data.get('page', {})
+
+        page_data = {
+            'title': page.get('title'),
+            'space': page.get('spaceKey', 'Unknown'),
+            'editor': data.get('userAccountId', 'Unknown'),
+            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+        }
+
+        await self.notification_manager.notify_confluence_page_updated(page_data)
+
+    async def _handle_confluence_comment_created(self, data: dict):
+        """Handle Confluence comment created event."""
+        comment = data.get('comment', {})
+        page = data.get('page', {})
+
+        comment_data = {
+            'page_title': page.get('title'),
+            'space': page.get('spaceKey', 'Unknown'),
+            'commenter': data.get('userAccountId', 'Unknown'),
+            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+        }
+
+        await self.notification_manager.notify_confluence_comment_created(comment_data)
 
     def set_notification_manager(self, manager):
         """Set the notification manager for sending Discord messages."""

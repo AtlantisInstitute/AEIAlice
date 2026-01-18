@@ -5,12 +5,24 @@ Handles monitoring Jira projects for new and completed tasks.
 
 import logging
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Optional
 from jira import JIRA
 from jira.exceptions import JIRAError
 import config
 
 logger = logging.getLogger('Alice.Jira')
+
+# Pacific timezone for California
+PACIFIC_TZ = ZoneInfo('America/Los_Angeles')
+
+def format_pacific_time(iso_date: str) -> str:
+    """Convert ISO date string to Pacific time formatted string."""
+    dt = datetime.fromisoformat(iso_date.replace('Z', '+00:00'))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    pacific_dt = dt.astimezone(PACIFIC_TZ)
+    return pacific_dt.strftime('%Y-%m-%d %H:%M PT')
 
 class JiraIntegration:
     def __init__(self):
@@ -151,15 +163,19 @@ class JiraIntegration:
 **Priority:** {issue['priority']}
 **Assignee:** {issue['assignee']}
 **Created by:** {issue['creator']}
-**URL:** {issue['url']}"""
+**URL:** {issue['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
 
         elif event_type == 'completed':
             return f"""✅ **Jira Task Completed**
 
 **{issue['key']}:** {issue['summary']}
 **Assignee:** {issue['assignee']}
-**Completed:** {datetime.fromisoformat(issue['completed_at']).strftime('%Y-%m-%d %H:%M UTC')}
-**URL:** {issue['url']}"""
+**Completed:** {format_pacific_time(issue['completed_at'])}
+**URL:** {issue['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
 
         return f"Unknown event type: {event_type}"
 

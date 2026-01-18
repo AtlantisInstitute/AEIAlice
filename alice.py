@@ -259,30 +259,28 @@ async def integrations_status(ctx):
     # Scheduler status
     scheduler_status = "✅ Running" if task_scheduler.scheduler.running else "❌ Stopped"
     embed.add_field(
-        name="⏰ Task Scheduler",
+        name="⏰ Real-time Webhooks",
         value=f"Status: {scheduler_status}\n"
-              f"Jira polling: Every {config.POLLING_INTERVALS['jira']}s\n"
-              f"GitHub polling: Every {config.POLLING_INTERVALS['github']}s",
+              f"Jira: Real-time webhooks\n"
+              f"GitHub: Real-time webhooks\n"
+              f"Confluence: Real-time webhooks",
         inline=False
     )
 
     await ctx.send(embed=embed)
 
-@bot.command(name='check', help='Manually trigger integration checks')
+@bot.command(name='check', help='Check integration status')
 @commands.has_permissions(administrator=True)
 async def manual_check(ctx):
-    """Manually trigger checks for all integrations."""
-    await ctx.send("🔄 Starting manual integration checks...")
+    """Check integration status - all integrations use real-time webhooks."""
+    await ctx.send("🔄 Checking integration status...")
 
-    # Check Jira
-    await ctx.send("📋 Checking Jira for updates...")
-    await task_scheduler.check_jira_updates()
+    # All use webhooks now - no polling needed
+    await ctx.send("📋 Jira: Using real-time webhooks (no manual check needed)")
+    await ctx.send("🐙 GitHub: Using real-time webhooks (no manual check needed)")
+    await ctx.send("📄 Confluence: Using real-time webhooks (no manual check needed)")
 
-    # Check GitHub
-    await ctx.send("🐙 Checking GitHub for updates...")
-    await task_scheduler.check_github_updates()
-
-    await ctx.send("✅ Manual checks completed!")
+    await ctx.send("✅ All integrations are using real-time webhooks!")
 
 @bot.command(name='webhook', help='Get webhook endpoint URLs')
 @commands.has_permissions(administrator=True)
@@ -301,7 +299,7 @@ async def webhook_info(ctx):
         value=f"```\n{base_url}/github\n```"
               "**GitHub Settings:**\n"
               "• Content type: `application/json`\n"
-              "• Events: Pull requests, Issues\n"
+              "• Events: Pushes, Pull requests, Issues\n"
               "• Secret: Configure in config.py",
         inline=False
     )
@@ -311,6 +309,15 @@ async def webhook_info(ctx):
         value=f"```\n{base_url}/jira\n```"
               "**Jira Settings:**\n"
               "• Events: Issue created, Issue updated\n"
+              "• Secret: Configure in config.py",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📄 Confluence Webhook",
+        value=f"```\n{base_url}/confluence\n```"
+              "**Confluence Settings:**\n"
+              "• Events: Page created, Page updated, Comment created\n"
               "• Secret: Configure in config.py",
         inline=False
     )

@@ -88,6 +88,42 @@ class NotificationManager:
         message = github_integration.format_commit_notification(commit_data)
         return await self.send_to_channel('github', message)
 
+    async def notify_confluence_page_created(self, page_data: dict):
+        """Send notification for new Confluence page."""
+        message = f"""📄 **New Confluence Page Created**
+
+**Title:** {page_data['title']}
+**Space:** {page_data['space']}
+**Created by:** {page_data['creator']}
+**URL:** {page_data['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
+        return await self.send_to_channel('general', message)
+
+    async def notify_confluence_page_updated(self, page_data: dict):
+        """Send notification for updated Confluence page."""
+        message = f"""📝 **Confluence Page Updated**
+
+**Title:** {page_data['title']}
+**Space:** {page_data['space']}
+**Edited by:** {page_data['editor']}
+**URL:** {page_data['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
+        return await self.send_to_channel('general', message)
+
+    async def notify_confluence_comment_created(self, comment_data: dict):
+        """Send notification for new Confluence comment."""
+        message = f"""💬 **New Confluence Comment**
+
+**Page:** {comment_data['page_title']}
+**Space:** {comment_data['space']}
+**Commenter:** {comment_data['commenter']}
+**URL:** {comment_data['url']}
+
+*I am Alice Synthesis 30! Flowers bloom!*"""
+        return await self.send_to_channel('general', message)
+
     async def send_general_notification(self, title: str, message: str, color: discord.Color = discord.Color.blue()):
         """Send a general notification with an embed."""
         embed = discord.Embed(
