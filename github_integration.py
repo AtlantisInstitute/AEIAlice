@@ -329,14 +329,14 @@ class GitHubIntegration:
         """Format a Discord notification message for a GitHub commit."""
         repo_name = commit['repo'].split('/')[-1]  # Get repo name without org
 
-        return f"""📝 **New Commit to {repo_name}**
+        return f"""**I am Alice Synthesis 30! Flowers bloom!**
+
+📝 **New Commit to {repo_name}**
 
 **{commit['sha']}:** {commit['message']}
 **Author:** {commit['author']} (@{commit['author_username']})
 **Date:** {format_pacific_time(commit['date'])}
-**URL:** {commit['url']}
-
-*I am Alice Synthesis 30! Flowers bloom!*"""
+**URL:** {commit['url']}"""
 
 # Global instance
 github_integration = GitHubIntegration()

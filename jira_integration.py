@@ -156,26 +156,26 @@ class JiraIntegration:
     def format_issue_notification(self, issue: Dict, event_type: str) -> str:
         """Format a Discord notification message for a Jira issue."""
         if event_type == 'new':
-            return f"""🆕 **New Jira Task Created**
+            return f"""**I am Alice Synthesis 30! Flowers bloom!**
+
+🆕 **New Jira Task Created**
 
 **{issue['key']}:** {issue['summary']}
 **Type:** {issue['type']}
 **Priority:** {issue['priority']}
 **Assignee:** {issue['assignee']}
 **Created by:** {issue['creator']}
-**URL:** {issue['url']}
-
-*I am Alice Synthesis 30! Flowers bloom!*"""
+**URL:** {issue['url']}"""
 
         elif event_type == 'completed':
-            return f"""✅ **Jira Task Completed**
+            return f"""**I am Alice Synthesis 30! Flowers bloom!**
+
+✅ **Jira Task Completed**
 
 **{issue['key']}:** {issue['summary']}
 **Assignee:** {issue['assignee']}
 **Completed:** {format_pacific_time(issue['completed_at'])}
-**URL:** {issue['url']}
-
-*I am Alice Synthesis 30! Flowers bloom!*"""
+**URL:** {issue['url']}"""
 
         return f"Unknown event type: {event_type}"
 
