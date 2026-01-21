@@ -20,9 +20,6 @@ class TaskScheduler:
         """Set the notification manager for sending notifications."""
         self.notification_manager = manager
 
-    # Jira polling removed - now using webhooks for real-time notifications
-    # GitHub polling removed - now using webhooks for real-time notifications
-
     async def send_status_update(self):
         """Send a periodic status update."""
         try:
@@ -35,8 +32,7 @@ class TaskScheduler:
 
     def setup_jobs(self):
         """Setup the scheduled jobs."""
-        # All polling removed - now using webhooks for real-time notifications
-        logger.info("Jira using webhooks (no polling)")
+        # Using webhooks for real-time notifications
         logger.info("GitHub using webhooks (no polling)")
 
         # Status update job (daily) - Disabled to avoid chat spam

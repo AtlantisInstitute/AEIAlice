@@ -85,6 +85,8 @@ class WebhookHandler:
             # Run async handling in the event loop
             if self.loop and self.notification_manager:
                 self.loop.create_task(self._process_github_event(event_type, data))
+            else:
+                logger.error(f"Cannot process webhook - loop: {self.loop is not None}, notification_manager: {self.notification_manager is not None}")
 
             return jsonify({"status": "processed"}), 200
 
@@ -217,16 +219,18 @@ class WebhookHandler:
         ref = data.get('ref', '')
         repo_full_name = data.get('repository', {}).get('full_name', '')
 
+        logger.info(f"Processing push event: {len(commits)} commit(s) to {ref} in {repo_full_name}")
+
         # Only process commits to main/master branches
         if not ref.endswith('/main') and not ref.endswith('/master'):
-            logger.debug(f"Ignoring push to non-main branch: {ref}")
+            logger.info(f"Ignoring push to non-main branch: {ref}")
             return
 
         # Process each commit in the push (commits are already in chronological order from GitHub)
         for commit in commits:
             # Skip if we've already seen this commit (from polling)
             if commit['id'] in github_integration.known_commits:
-                logger.debug(f"Skipping already known commit: {commit['id'][:7]}")
+                logger.info(f"Skipping already known commit: {commit['id'][:7]}")
                 continue
 
             # Mark as known to prevent duplicate from polling
@@ -243,6 +247,7 @@ class WebhookHandler:
                 'url': commit['url'],
                 'branch': ref.split('/')[-1],
             }
+            logger.info(f"Sending commit notification: {commit_data['sha']} - {commit_data['message'][:50]}")
             await self.notification_manager.notify_github_new_commit(commit_data)
             await asyncio.sleep(1)  # Small delay between commit notifications
 
