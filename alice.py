@@ -259,28 +259,28 @@ async def integrations_status(ctx):
     # Scheduler status
     scheduler_status = "✅ Running" if task_scheduler.scheduler.running else "❌ Stopped"
     embed.add_field(
-        name="⏰ Real-time Webhooks",
+        name="⏰ Notification System",
         value=f"Status: {scheduler_status}\n"
+              f"GitHub: Polling every 60 seconds\n"
               f"Jira: Real-time webhooks\n"
-              f"GitHub: Real-time webhooks\n"
               f"Confluence: Real-time webhooks",
         inline=False
     )
 
     await ctx.send(embed=embed)
 
-@bot.command(name='check', help='Check integration status')
+@bot.command(name='check', help='Manually check for new GitHub commits')
 @commands.has_permissions(administrator=True)
 async def manual_check(ctx):
-    """Check integration status - all integrations use real-time webhooks."""
-    await ctx.send("🔄 Checking integration status...")
+    """Manually trigger a check for new GitHub commits."""
+    await ctx.send("🔄 Checking for new GitHub commits...")
 
-    # All use webhooks now - no polling needed
-    await ctx.send("📋 Jira: Using real-time webhooks (no manual check needed)")
-    await ctx.send("🐙 GitHub: Using real-time webhooks (no manual check needed)")
-    await ctx.send("📄 Confluence: Using real-time webhooks (no manual check needed)")
-
-    await ctx.send("✅ All integrations are using real-time webhooks!")
+    try:
+        # Trigger a manual GitHub commit check
+        await task_scheduler.check_github_commits()
+        await ctx.send("✅ GitHub commit check complete!")
+    except Exception as e:
+        await ctx.send(f"❌ Error checking GitHub: {e}")
 
 @bot.command(name='webhook', help='Get webhook endpoint URLs')
 @commands.has_permissions(administrator=True)

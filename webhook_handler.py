@@ -82,9 +82,9 @@ class WebhookHandler:
 
             logger.info(f"Received GitHub webhook: {event_type}")
 
-            # Run async handling in the event loop
+            # Run async handling in the event loop (thread-safe)
             if self.loop and self.notification_manager:
-                self.loop.create_task(self._process_github_event(event_type, data))
+                asyncio.run_coroutine_threadsafe(self._process_github_event(event_type, data), self.loop)
             else:
                 logger.error(f"Cannot process webhook - loop: {self.loop is not None}, notification_manager: {self.notification_manager is not None}")
 
@@ -109,9 +109,9 @@ class WebhookHandler:
 
             logger.info("Received Jira webhook")
 
-            # Run async handling in the event loop
+            # Run async handling in the event loop (thread-safe)
             if self.loop and self.notification_manager:
-                self.loop.create_task(self._process_jira_event(data))
+                asyncio.run_coroutine_threadsafe(self._process_jira_event(data), self.loop)
 
             return jsonify({"status": "processed"}), 200
 
@@ -127,9 +127,9 @@ class WebhookHandler:
 
             logger.info("Received Confluence webhook")
 
-            # Run async handling in the event loop
+            # Run async handling in the event loop (thread-safe)
             if self.loop and self.notification_manager:
-                self.loop.create_task(self._process_confluence_event(data))
+                asyncio.run_coroutine_threadsafe(self._process_confluence_event(data), self.loop)
 
             return jsonify({"status": "processed"}), 200
 
