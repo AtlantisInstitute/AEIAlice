@@ -42,6 +42,12 @@ class GitHubIntegration:
             # Test connection
             self.github.get_user().login
             logger.info("Successfully connected to GitHub")
+
+            # Seed known_commits with existing commits on first connect
+            # This prevents notifying about old commits on startup
+            if not self.known_commits:
+                self._seed_known_commits()
+
             return True
         except GithubException as e:
             logger.error(f"Failed to connect to GitHub: {e}")
@@ -49,6 +55,30 @@ class GitHubIntegration:
         except Exception as e:
             logger.error(f"Unexpected error connecting to GitHub: {e}")
             return False
+
+    def _seed_known_commits(self):
+        """Seed known_commits with existing commits to avoid spam on startup."""
+        try:
+            for repo_name in config.GITHUB_CONFIG['repos']:
+                try:
+                    repo = self.github.get_repo(repo_name)
+                    default_branch = repo.default_branch
+                    commits = repo.get_commits(sha=default_branch)
+
+                    # Mark the most recent commits as known
+                    commit_count = 0
+                    for commit in commits:
+                        if commit_count >= 50:
+                            break
+                        self.known_commits.add(commit.sha)
+                        commit_count += 1
+
+                    logger.info(f"Seeded {commit_count} existing commits from {repo_name}")
+
+                except GithubException as e:
+                    logger.error(f"Error seeding commits from {repo_name}: {e}")
+        except Exception as e:
+            logger.error(f"Error seeding known commits: {e}")
 
     def get_recent_prs(self, hours_back: int = 1) -> List[Dict]:
         """Get pull requests created or updated in the last N hours."""
@@ -173,10 +203,25 @@ class GitHubIntegration:
         for repo_name in config.GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
-                # Get commits since last check
-                commits = repo.get_commits(since=self.last_check)
+                # Get the default branch to check for commits
+                default_branch = repo.default_branch
+
+                # Fetch recent commits WITHOUT date filtering
+                # The 'since' parameter filters by commit DATE, not push date,
+                # which misses commits that were authored earlier but pushed later.
+                # Instead, we fetch recent commits and rely on known_commits set
+                # to track what we've already seen.
+                commits = repo.get_commits(sha=default_branch)
+
+                # Only check the most recent commits (limit to avoid processing too many)
+                commit_count = 0
+                max_commits_to_check = 50  # Check last 50 commits max
 
                 for commit in commits:
+                    if commit_count >= max_commits_to_check:
+                        break
+                    commit_count += 1
+
                     commit_sha = commit.sha
                     if commit_sha not in self.known_commits:
                         # Get commit details
@@ -189,9 +234,9 @@ class GitHubIntegration:
                             'author_username': commit.author.login if commit.author else 'Unknown',
                             'date': commit.commit.author.date.isoformat(),
                             'url': commit.html_url,
-                            'branch': 'main',  # Default, we'll try to get the actual branch
+                            'branch': default_branch,
                         }
-                        
+
                         new_commits.append(commit_data)
                         self.known_commits.add(commit_sha)
 
