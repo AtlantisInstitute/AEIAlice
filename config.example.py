@@ -1,4 +1,4 @@
-# Alice Discord Bot Configuration - Example Template
+# Alicebot Discord Bot Configuration - Example Template
 # Copy this file to config.py and fill in your actual values
 
 # Bot Token for Atlantis Institute Discord Server
@@ -9,7 +9,8 @@ DISCORD_TOKEN = "YOUR_DISCORD_BOT_TOKEN_HERE"
 NOTIFICATION_CHANNELS = {
     'general': 123456789012345678,  # Replace with actual Discord channel ID for general notifications
     'jira': 123456789012345679,     # Replace with actual Discord channel ID for Jira notifications
-    'github': 123456789012345680,   # Replace with actual Discord channel ID for GitHub notifications
+    'github': 123456789012345680,   # Replace with actual Discord channel ID for GitHub notifications (PRs, Issues)
+    'commits': 123456789012345681,  # Replace with actual Discord channel ID for commit/push notifications
 }
 
 # Jira Integration Configuration

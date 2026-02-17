@@ -1,5 +1,5 @@
 """
-Task Scheduler for Alice Bot
+Task Scheduler for Alicebot
 Handles background polling tasks for Jira and GitHub integrations.
 """
 
@@ -9,7 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import config
 
-logger = logging.getLogger('Alice.Scheduler')
+logger = logging.getLogger('Alicebot.Scheduler')
 
 # Polling interval for GitHub commits (in seconds)
 GITHUB_POLL_INTERVAL = 60  # Check every 60 seconds
@@ -46,7 +46,7 @@ class TaskScheduler:
         """Send a periodic status update."""
         try:
             await self.notification_manager.send_status_notification(
-                "🤖 Alice integrations are running smoothly!\n"
+                "🤖 Alicebot integrations are running smoothly!\n"
                 "Monitoring Jira tasks and GitHub repositories for updates."
             )
         except Exception as e:

@@ -1,5 +1,5 @@
 """
-Notification Manager for Alice Bot
+Notification Manager for Alicebot
 Handles sending notifications to Discord channels for various integrations.
 """
 
@@ -8,7 +8,7 @@ import discord
 from typing import Optional
 import config
 
-logger = logging.getLogger('Alice.Notifications')
+logger = logging.getLogger('Alicebot.Notifications')
 
 class NotificationManager:
     def __init__(self, bot):
@@ -86,11 +86,11 @@ class NotificationManager:
         """Send notification for new GitHub commit."""
         from github_integration import github_integration
         message = github_integration.format_commit_notification(commit_data)
-        return await self.send_to_channel('github', message)
+        return await self.send_to_channel('commits', message)
 
     async def notify_confluence_page_created(self, page_data: dict):
         """Send notification for new Confluence page."""
-        message = f"""**I am Alice Synthesis 30! Flowers bloom!**
+        message = f"""**I am Alicebot! Flowers bloom!**
 
 📄 **New Confluence Page Created**
 
@@ -102,7 +102,7 @@ class NotificationManager:
 
     async def notify_confluence_page_updated(self, page_data: dict):
         """Send notification for updated Confluence page."""
-        message = f"""**I am Alice Synthesis 30! Flowers bloom!**
+        message = f"""**I am Alicebot! Flowers bloom!**
 
 📝 **Confluence Page Updated**
 
@@ -114,7 +114,7 @@ class NotificationManager:
 
     async def notify_confluence_comment_created(self, comment_data: dict):
         """Send notification for new Confluence comment."""
-        message = f"""**I am Alice Synthesis 30! Flowers bloom!**
+        message = f"""**I am Alicebot! Flowers bloom!**
 
 💬 **New Confluence Comment**
 
@@ -132,7 +132,7 @@ class NotificationManager:
             color=color,
             timestamp=discord.utils.utcnow()
         )
-        embed.set_footer(text="Alice - Atlantis Institute Bot")
+        embed.set_footer(text="Alicebot - Atlantis Institute Bot")
 
         return await self.send_to_channel('general', "", embed=embed)
 

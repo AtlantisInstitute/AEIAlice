@@ -1,5 +1,5 @@
 """
-Jira Integration Module for Alice Bot
+Jira Integration Module for Alicebot
 Handles monitoring Jira projects for new and completed tasks.
 """
 
@@ -11,7 +11,7 @@ from jira import JIRA
 from jira.exceptions import JIRAError
 import config
 
-logger = logging.getLogger('Alice.Jira')
+logger = logging.getLogger('Alicebot.Jira')
 
 # Pacific timezone for California
 PACIFIC_TZ = ZoneInfo('America/Los_Angeles')
@@ -156,7 +156,7 @@ class JiraIntegration:
     def format_issue_notification(self, issue: Dict, event_type: str) -> str:
         """Format a Discord notification message for a Jira issue."""
         if event_type == 'new':
-            return f"""**I am Alice Synthesis 30! Flowers bloom!**
+            return f"""**I am Alicebot! Flowers bloom!**
 
 🆕 **New Jira Task Created**
 
@@ -168,7 +168,7 @@ class JiraIntegration:
 **URL:** {issue['url']}"""
 
         elif event_type == 'completed':
-            return f"""**I am Alice Synthesis 30! Flowers bloom!**
+            return f"""**I am Alicebot! Flowers bloom!**
 
 ✅ **Jira Task Completed**
 

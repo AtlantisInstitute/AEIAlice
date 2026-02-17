@@ -1,5 +1,5 @@
 """
-Webhook Handler for Alice Bot
+Webhook Handler for Alicebot
 Handles incoming webhooks from GitHub, Jira, and Confluence for real-time notifications.
 """
 
@@ -13,7 +13,7 @@ import threading
 from typing import Optional
 import config
 
-logger = logging.getLogger('Alice.Webhooks')
+logger = logging.getLogger('Alicebot.Webhooks')
 
 class WebhookHandler:
     def __init__(self):
@@ -41,7 +41,7 @@ class WebhookHandler:
 
         @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/health", methods=['GET'])
         def health_check():
-            return jsonify({"status": "healthy", "service": "alice-webhooks"})
+            return jsonify({"status": "healthy", "service": "alicebot-webhooks"})
 
     def _verify_github_signature(self, payload: bytes, signature: str) -> bool:
         """Verify GitHub webhook signature."""

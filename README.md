@@ -1,6 +1,6 @@
-# Alice 🤖
+# Alicebot 🤖
 
-**Alice Synthesis 30** is the official AI Discord bot for Atlantis Institute, designed to manage the Discord server and provide automated integrations with development tools.
+**Alicebot** is the official AI Discord bot for Atlantis Institute, designed to manage the Discord server and provide automated integrations with development tools.
 
 ## Features
 
@@ -53,7 +53,7 @@
 ### 🚀 Quick Start
 
 ```bash
-python alice.py
+python alicebot.py
 ```
 
 The bot will:
@@ -64,7 +64,7 @@ The bot will:
 
 ### Available Commands
 
-- `!hello` - Alice introduces herself
+- `!hello` - Alicebot introduces itself
 - `!ping` - Check bot latency
 - `!integrations` - Check status of all integrations
 - `!check` - Manually trigger integration checks (admin only)
@@ -129,7 +129,7 @@ Update the channel IDs in `config.py` for notifications:
 
 ### Available Commands
 
-- `!hello` - Alice introduces herself
+- `!hello` - Alicebot introduces itself
 - `!ping` - Check bot latency
 - `!integrations` - Check status of all integrations
 - `!check` - Manually trigger integration checks (admin only)
@@ -137,16 +137,16 @@ Update the channel IDs in `config.py` for notifications:
 
 ### Adding New Features
 
-Alice is built with a modular architecture using discord.py's commands extension. To add new commands:
+Alicebot is built with a modular architecture using discord.py's commands extension. To add new commands:
 
-1. Add new command functions in `alice.py` using the `@bot.command()` decorator
+1. Add new command functions in `alicebot.py` using the `@bot.command()` decorator
 2. For complex features, consider creating separate cog files for organization
 
 ## Project Structure
 
 ```
-Alice/
-├── alice.py              # Main bot file with Discord integration
+Alicebot/
+├── alicebot.py              # Main bot file with Discord integration
 ├── config.py             # Configuration (API tokens, channels, etc.)
 ├── requirements.txt      # Python dependencies
 ├── .gitignore            # Git ignore rules
@@ -166,7 +166,7 @@ Alice/
 
 ## Development
 
-Alice is built with discord.py, a modern, easy-to-use, feature-rich, and async-ready API wrapper for Discord.
+Alicebot is built with discord.py, a modern, easy-to-use, feature-rich, and async-ready API wrapper for Discord.
 
 ### Adding Commands
 
@@ -188,7 +188,7 @@ async def on_event_name():
 
 ## Support
 
-For questions or issues with Alice, please contact the Atlantis Institute development team.
+For questions or issues with Alicebot, please contact the Atlantis Institute development team.
 
 ## License
 

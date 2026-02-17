@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Alice - Discord Bot for Atlantis Institute
+Alicebot - Discord Bot for Atlantis Institute
 A helpful Discord bot to manage the Atlantis Institute server.
 """
 
@@ -26,36 +26,36 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger('Alice')
+logger = logging.getLogger('Alicebot')
 
 # PID file location
-PID_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alice.pid')
+PID_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alicebot.pid')
 
-def kill_all_alice_instances():
-    """Kill all running Alice bot instances."""
+def kill_all_alicebot_instances():
+    """Kill all running Alicebot instances."""
     current_pid = os.getpid()
     killed_count = 0
     
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             cmdline = proc.info.get('cmdline', [])
-            if cmdline and 'alice.py' in ' '.join(cmdline).lower():
+            if cmdline and 'alicebot.py' in ' '.join(cmdline).lower():
                 if proc.info['pid'] != current_pid:
-                    logger.info(f"Killing old Alice instance (PID: {proc.info['pid']})")
+                    logger.info(f"Killing old Alicebot instance (PID: {proc.info['pid']})")
                     proc.kill()
                     killed_count += 1
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     
     if killed_count > 0:
-        logger.info(f"Killed {killed_count} old Alice instance(s)")
+        logger.info(f"Killed {killed_count} old Alicebot instance(s)")
     return killed_count
 
 def check_single_instance():
-    """Ensure only one instance of Alice is running."""
+    """Ensure only one instance of Alicebot is running."""
     # Kill any existing instances first
-    kill_all_alice_instances()
-    
+    kill_all_alicebot_instances()
+
     # Create PID file with current process ID
     try:
         with open(PID_FILE, 'w') as f:
@@ -85,13 +85,13 @@ def stop_integrations():
 
 def signal_handler(signum, frame):
     """Handle termination signals gracefully."""
-    logger.info(f'Received signal {signum}, shutting down Alice...')
+    logger.info(f'Received signal {signum}, shutting down Alicebot...')
 
     # Stop task scheduler
     if task_scheduler:
         task_scheduler.stop()
 
-    kill_all_alice_instances()
+    kill_all_alicebot_instances()
     cleanup_pid_file()
     sys.exit(0)
 
@@ -113,7 +113,7 @@ async def on_ready():
     """Called when the bot is ready and connected to Discord."""
     global notification_manager, webhook_thread
 
-    logger.info(f'Alice is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
+    logger.info(f'Alicebot is online! Logged in as {bot.user.name} (ID: {bot.user.id})')
     logger.info(f'Connected to {len(bot.guilds)} server(s)')
 
     # Set a custom status
@@ -161,7 +161,7 @@ async def on_message(message):
 @bot.event
 async def on_guild_join(guild):
     """Called when the bot joins a new guild (server)."""
-    logger.info(f'Alice has joined a new guild: {guild.name} (ID: {guild.id})')
+    logger.info(f'Alicebot has joined a new guild: {guild.name} (ID: {guild.id})')
 
     # Find a suitable channel to send the intro message
     # Try system channel first, then general channel, then the first text channel
@@ -184,17 +184,17 @@ async def on_guild_join(guild):
                     break
 
     if channel:
-        intro_message = ("Hello, my name is Alice Synthesis 30 and I am the new AI assitant administrator "
+        intro_message = ("Hello, my name is Alicebot and I am the new AI assitant administrator "
                         "for Atlantis Institute and will update the team on here with all git commits done on Atlantis Eons")
         await channel.send(intro_message)
         logger.info(f'Sent intro message to #{channel.name} in {guild.name}')
     else:
         logger.warning(f'Could not find a suitable channel to send intro message in {guild.name}')
 
-@bot.command(name='hello', help='Say hello to Alice!')
+@bot.command(name='hello', help='Say hello to Alicebot!')
 async def hello(ctx):
     """Basic hello command to test the bot."""
-    await ctx.send(f'Hello {ctx.author.mention}! I am Alice, your friendly Discord bot for Atlantis Institute! 🤖')
+    await ctx.send(f'Hello {ctx.author.mention}! I am Alicebot, your friendly Discord bot for Atlantis Institute! 🤖')
 
 @bot.command(name='ping', help='Check bot latency')
 async def ping(ctx):
@@ -206,7 +206,7 @@ async def ping(ctx):
 async def integrations_status(ctx):
     """Show the status of all integrations."""
     embed = discord.Embed(
-        title="🤖 Alice Integration Status",
+        title="🤖 Alicebot Integration Status",
         color=discord.Color.blue(),
         timestamp=discord.utils.utcnow()
     )
@@ -335,14 +335,14 @@ def main():
     
     # Register cleanup function
     atexit.register(cleanup_pid_file)
-    atexit.register(kill_all_alice_instances)
+    atexit.register(kill_all_alicebot_instances)
     atexit.register(stop_integrations)
     
     # Ensure single instance
     check_single_instance()
     
     try:
-        logger.info('Starting Alice bot...')
+        logger.info('Starting Alicebot...')
         bot.run(config.DISCORD_TOKEN)
     except discord.LoginFailure:
         logger.error('Failed to login. Please check your token in config.py')
@@ -352,10 +352,10 @@ def main():
         logger.error(f'An error occurred: {e}')
         logger.info('If you see SSL certificate errors, try running with: export SSL_CERT_FILE=/etc/ssl/cert.pem')
     finally:
-        logger.info('Cleaning up and shutting down Alice...')
-        kill_all_alice_instances()
+        logger.info('Cleaning up and shutting down Alicebot...')
+        kill_all_alicebot_instances()
         cleanup_pid_file()
-        logger.info('Alice bot stopped.')
+        logger.info('Alicebot stopped.')
 
 if __name__ == '__main__':
     main()

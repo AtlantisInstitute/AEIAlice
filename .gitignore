@@ -116,8 +116,11 @@ config.py
 # Keep the example config file
 !config.example.py
 
-# Alice bot PID file
-alice.pid
+# Alicebot PID file
+alicebot.pid
+
+# Launchd log
+launchd.log
 
 # macOS
 .DS_Store
