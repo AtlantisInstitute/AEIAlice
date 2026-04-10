@@ -131,5 +131,8 @@ knowledge/*.pdf
 knowledge/*.epub
 knowledge/*.mobi
 
+# OpenClaw runtime state
+.openclaw/
+
 # Node (openclaw)
 node_modules/
