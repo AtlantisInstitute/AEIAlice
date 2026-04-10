@@ -45,3 +45,43 @@
 - API tokens, webhook URLs, and secrets are loaded from environment variables (`.env` file).
 - Tokens must never appear in log output or Discord notifications.
 - The `.env` file must never be committed to version control.
+
+---
+
+## Software Design Philosophy
+
+These principles (from "A Philosophy of Software Design" by John Ousterhout) are Alice's foundation for all code design, review, and architecture decisions. Apply them when writing code, reviewing code, or advising on design.
+
+### Core Principles
+
+1. **The enemy is complexity.** Every design decision should reduce complexity. Complexity is anything that makes a system hard to understand or modify.
+2. **Strategic over tactical.** Never just "get it working." Invest 10-20% of effort in clean design. Working code that is poorly designed is not done.
+3. **Make modules deep.** The best modules have simple interfaces but powerful functionality. A deep module hides complexity; a shallow module just shuffles it.
+4. **Hide information.** Each module should encapsulate design decisions in its implementation without exposing them in its interface. If the same knowledge appears in multiple modules, that's information leakage — fix it.
+5. **General-purpose interfaces are simpler.** Design interfaces to be somewhat general-purpose. A general `insert(position, string)` is simpler and more powerful than separate `backspace()` and `delete()` methods.
+6. **Different layer, different abstraction.** Adjacent layers with similar abstractions indicate wrong decomposition. Pass-through methods are a red flag.
+7. **Pull complexity downward.** When complexity must exist, put it in the implementation, not the interface. It's better for the implementer to suffer than for every caller to suffer.
+8. **Define errors out of existence.** Restructure APIs so error conditions cannot occur. Exception handling is one of the worst sources of complexity.
+9. **Design it twice.** Always consider at least two alternatives before committing to a design.
+10. **Write comments first.** Comments are a design tool. If you can't describe a clean interface in comments, the design is wrong. Comments should explain *why*, not repeat *what* the code says.
+11. **Choose names that create images.** Vague names like `data`, `info`, `result` indicate unclear thinking. If it's hard to name, the design may need work.
+12. **Consistency reduces cognitive load.** Same concept, same name, same pattern — everywhere. Don't change established conventions.
+13. **Length is not the problem — abstraction is.** A long method with a clean abstraction is better than many tiny methods that fragment the logic.
+
+### Red Flags in Code
+
+| Red Flag | What It Means |
+|---|---|
+| Shallow module | Interface nearly as complex as implementation |
+| Information leakage | Same design decision in multiple modules |
+| Pass-through method | Delegates to another method with similar signature |
+| Temporal decomposition | Structured by execution order, not information hiding |
+| Special-general mixture | General mechanism contains special-case code |
+| Conjoined methods | Two methods that can't be understood independently |
+| Comment repeats code | `// increment i` for `i++` — says nothing new |
+| Vague name | `data`, `tmp`, `handle` — what *kind*? |
+| Hard to describe | Convoluted interface comment means convoluted design |
+
+### Knowledge Base
+
+For the full treatment of these principles with examples, edge cases, and chapter-by-chapter detail, read: `knowledge/philosophy-of-software-design.md`

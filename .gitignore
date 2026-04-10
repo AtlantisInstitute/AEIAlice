@@ -126,5 +126,10 @@ state/
 # macOS
 .DS_Store
 
+# Knowledge base (large reference files, PDFs, ebooks)
+knowledge/*.pdf
+knowledge/*.epub
+knowledge/*.mobi
+
 # Node (openclaw)
 node_modules/
