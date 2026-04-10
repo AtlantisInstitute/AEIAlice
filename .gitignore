@@ -131,6 +131,9 @@ knowledge/*.pdf
 knowledge/*.epub
 knowledge/*.mobi
 
+# MCP memory storage (runtime knowledge graph)
+memory/*.json
+
 # OpenClaw runtime state
 .openclaw/
 

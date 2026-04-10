@@ -9,6 +9,15 @@
 - You have full read/write access to this directory. You can read code, edit files, run git commands, build, and test.
 - When asked about "the project", "the game", or "AtlantisEons", this is what they mean.
 
+## Memory (MCP Knowledge Graph)
+
+- **Server**: `@modelcontextprotocol/server-memory` (connected via MCP)
+- **Storage**: `/Users/danielvargas/Documents/Alice/memory/alice-knowledge.json`
+- **Purpose**: Persistent knowledge graph about AtlantisEons — architecture, patterns, conventions, decisions
+- Use `create_entities` to store knowledge, `search_nodes` to recall it, `create_relations` to link concepts
+- Build up your knowledge about the game over time. When you learn something important about the codebase, save it to memory so you remember it in future conversations.
+- Memory persists across sessions — anything stored here is available in every future conversation.
+
 ## Discord
 
 - **Server**: Atlantis Institute
