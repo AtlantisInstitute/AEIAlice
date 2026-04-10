@@ -1,4 +1,4 @@
-# Alicebot Discord Bot Configuration - Example Template
+# Alice Discord Bot Configuration - Example Template
 # Copy this file to config.py and fill in your actual values
 
 # Bot Token for Atlantis Institute Discord Server

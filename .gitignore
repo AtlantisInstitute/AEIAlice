@@ -116,8 +116,8 @@ config.py
 # Keep the example config file
 !config.example.py
 
-# Alicebot PID file
-alicebot.pid
+# Alice PID file
+alice.pid
 
 # Launchd log
 launchd.log

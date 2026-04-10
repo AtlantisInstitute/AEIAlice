@@ -1,5 +1,5 @@
 """
-GitHub Integration Module for Alicebot
+GitHub Integration Module for Alice
 Handles monitoring GitHub repositories for PRs and issues.
 """
 
@@ -11,7 +11,7 @@ from github import Github
 from github.GithubException import GithubException
 import config
 
-logger = logging.getLogger('Alicebot.GitHub')
+logger = logging.getLogger('Alice.GitHub')
 
 # Pacific timezone for California
 PACIFIC_TZ = ZoneInfo('America/Los_Angeles')
@@ -374,7 +374,7 @@ class GitHubIntegration:
         """Format a Discord notification message for a GitHub commit."""
         repo_name = commit['repo'].split('/')[-1]  # Get repo name without org
 
-        return f"""**I am Alicebot! Flowers bloom!**
+        return f"""**I am Alice! Flowers bloom!**
 
 📝 **New Commit to {repo_name}**
 
