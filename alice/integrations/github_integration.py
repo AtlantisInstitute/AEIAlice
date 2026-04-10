@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from typing import List, Dict, Optional
 from github import Github
 from github.GithubException import GithubException
-import config
+from alice.config import GITHUB_CONFIG
 
 logger = logging.getLogger('Alice.GitHub')
 
@@ -38,7 +38,7 @@ class GitHubIntegration:
         """Connect to GitHub using configuration settings."""
         try:
             if not self.github:
-                self.github = Github(config.GITHUB_CONFIG['token'])
+                self.github = Github(GITHUB_CONFIG['token'])
             # Test connection
             self.github.get_user().login
             logger.info("Successfully connected to GitHub")
@@ -59,7 +59,7 @@ class GitHubIntegration:
     def _seed_known_commits(self):
         """Seed known_commits with existing commits to avoid spam on startup."""
         try:
-            for repo_name in config.GITHUB_CONFIG['repos']:
+            for repo_name in GITHUB_CONFIG['repos']:
                 try:
                     repo = self.github.get_repo(repo_name)
                     default_branch = repo.default_branch
@@ -87,7 +87,7 @@ class GitHubIntegration:
                 return []
 
         all_prs = []
-        for repo_name in config.GITHUB_CONFIG['repos']:
+        for repo_name in GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get PRs updated recently
@@ -124,7 +124,7 @@ class GitHubIntegration:
                 return []
 
         all_issues = []
-        for repo_name in config.GITHUB_CONFIG['repos']:
+        for repo_name in GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get issues updated recently (excluding PRs)
@@ -200,7 +200,7 @@ class GitHubIntegration:
                 return []
 
         new_commits = []
-        for repo_name in config.GITHUB_CONFIG['repos']:
+        for repo_name in GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get the default branch to check for commits
@@ -258,7 +258,7 @@ class GitHubIntegration:
                 return []
 
         closed_prs = []
-        for repo_name in config.GITHUB_CONFIG['repos']:
+        for repo_name in GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get recently closed PRs
@@ -291,7 +291,7 @@ class GitHubIntegration:
                 return []
 
         closed_issues = []
-        for repo_name in config.GITHUB_CONFIG['repos']:
+        for repo_name in GITHUB_CONFIG['repos']:
             try:
                 repo = self.github.get_repo(repo_name)
                 # Get recently closed issues

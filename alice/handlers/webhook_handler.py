@@ -12,7 +12,7 @@ from flask import Flask, request, jsonify
 import json
 import time
 from typing import Optional
-import config
+from alice.config import WEBHOOK_CONFIG, GITHUB_CONFIG, JIRA_CONFIG, CONFLUENCE_CONFIG
 
 logger = logging.getLogger('Alice.Webhooks')
 
@@ -26,28 +26,28 @@ class WebhookHandler:
     def _setup_routes(self):
         """Setup Flask routes for webhooks."""
 
-        @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/github", methods=['POST'])
+        @self.app.route(f"{WEBHOOK_CONFIG['path']}/github", methods=['POST'])
         def github_webhook():
             return self._handle_github_webhook()
 
-        @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/jira", methods=['POST'])
+        @self.app.route(f"{WEBHOOK_CONFIG['path']}/jira", methods=['POST'])
         def jira_webhook():
             return self._handle_jira_webhook()
 
-        @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/confluence", methods=['POST'])
+        @self.app.route(f"{WEBHOOK_CONFIG['path']}/confluence", methods=['POST'])
         def confluence_webhook():
             return self._handle_confluence_webhook()
 
-        @self.app.route(f"{config.WEBHOOK_CONFIG['path']}/health", methods=['GET'])
+        @self.app.route(f"{WEBHOOK_CONFIG['path']}/health", methods=['GET'])
         def health_check():
             return jsonify({"status": "healthy", "service": "alice-notifications"})
 
     def _verify_github_signature(self, payload: bytes, signature: str) -> bool:
         """Verify GitHub webhook signature."""
-        if not config.GITHUB_CONFIG.get('webhook_secret'):
+        if not GITHUB_CONFIG.get('webhook_secret'):
             return True
 
-        secret = config.GITHUB_CONFIG['webhook_secret'].encode('utf-8')
+        secret = GITHUB_CONFIG['webhook_secret'].encode('utf-8')
         expected_signature = hmac.new(secret, payload, hashlib.sha256).hexdigest()
         expected_signature = f"sha256={expected_signature}"
 
@@ -55,10 +55,10 @@ class WebhookHandler:
 
     def _verify_jira_signature(self, payload: bytes, signature: str) -> bool:
         """Verify Jira webhook signature."""
-        if not config.JIRA_CONFIG.get('webhook_secret'):
+        if not JIRA_CONFIG.get('webhook_secret'):
             return True
 
-        secret = config.JIRA_CONFIG['webhook_secret'].encode('utf-8')
+        secret = JIRA_CONFIG['webhook_secret'].encode('utf-8')
         expected_signature = hmac.new(secret, payload, hashlib.sha256).hexdigest()
 
         return hmac.compare_digest(expected_signature, signature)
@@ -205,7 +205,7 @@ class WebhookHandler:
 
     def _handle_github_push_event(self, data: dict):
         """Handle GitHub push events."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
 
         commits = data.get('commits', [])
         ref = data.get('ref', '')
@@ -263,7 +263,7 @@ class WebhookHandler:
 
     def _handle_jira_issue_created(self, data: dict):
         """Handle Jira issue created event."""
-        from jira_integration import jira_integration
+        from alice.integrations.jira_integration import jira_integration
 
         issue = data.get('issue', {})
         issue_key = issue.get('key')
@@ -283,7 +283,7 @@ class WebhookHandler:
             'creator': issue.get('fields', {}).get('creator', {}).get('displayName'),
             'priority': issue.get('fields', {}).get('priority', {}).get('name') if issue.get('fields', {}).get('priority') else 'Not set',
             'type': issue.get('fields', {}).get('issuetype', {}).get('name'),
-            'url': f"{config.JIRA_CONFIG['server']}/browse/{issue_key}"
+            'url': f"{JIRA_CONFIG['server']}/browse/{issue_key}"
         }
 
         self.notification_manager.notify_jira_new_task(issue_data)
@@ -301,7 +301,7 @@ class WebhookHandler:
                     'status': item.get('toString'),
                     'assignee': issue.get('fields', {}).get('assignee', {}).get('displayName') if issue.get('fields', {}).get('assignee') else 'Unassigned',
                     'completed_at': data.get('timestamp'),
-                    'url': f"{config.JIRA_CONFIG['server']}/browse/{issue.get('key')}"
+                    'url': f"{JIRA_CONFIG['server']}/browse/{issue.get('key')}"
                 }
 
                 self.notification_manager.notify_jira_task_completed(issue_data)
@@ -332,7 +332,7 @@ class WebhookHandler:
             'title': page.get('title'),
             'space': page.get('spaceKey', 'Unknown'),
             'creator': data.get('userAccountId', 'Unknown'),
-            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+            'url': f"{CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
         }
 
         self.notification_manager.notify_confluence_page_created(page_data)
@@ -345,7 +345,7 @@ class WebhookHandler:
             'title': page.get('title'),
             'space': page.get('spaceKey', 'Unknown'),
             'editor': data.get('userAccountId', 'Unknown'),
-            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+            'url': f"{CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
         }
 
         self.notification_manager.notify_confluence_page_updated(page_data)
@@ -359,7 +359,7 @@ class WebhookHandler:
             'page_title': page.get('title'),
             'space': page.get('spaceKey', 'Unknown'),
             'commenter': data.get('userAccountId', 'Unknown'),
-            'url': f"{config.CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
+            'url': f"{CONFLUENCE_CONFIG['server']}/pages/viewpage.action?pageId={page.get('id')}"
         }
 
         self.notification_manager.notify_confluence_comment_created(comment_data)
@@ -370,8 +370,8 @@ class WebhookHandler:
 
     def run(self, host: str = None, port: int = None):
         """Run the Flask webhook server."""
-        host = host or config.WEBHOOK_CONFIG['host']
-        port = port or config.WEBHOOK_CONFIG['port']
+        host = host or WEBHOOK_CONFIG['host']
+        port = port or WEBHOOK_CONFIG['port']
 
         logger.info(f"Starting webhook server on {host}:{port}")
         self.app.run(host=host, port=port, debug=False, use_reloader=False)

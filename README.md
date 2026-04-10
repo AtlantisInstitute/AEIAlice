@@ -1,194 +1,127 @@
-# Alice 🤖
+# Alice
 
-**Alice** is the official AI Discord bot for Atlantis Institute, designed to manage the Discord server and provide automated integrations with development tools.
+**Alice** is the notification daemon for the Atlantis Institute development team. She monitors GitHub, Jira, and Confluence for events and sends formatted notifications to Discord channels via webhook HTTP posts.
+
+Alice is **not** a Discord bot — she does not connect to the Discord gateway. AI conversations and interactive Discord commands are handled by [OpenClaw](openclaw/), a separate TypeScript project in this repo.
 
 ## Features
 
-### 🤖 Core Functionality
-- **Basic Commands**: Hello and ping commands to test functionality
-- **Extensible Architecture**: Built with discord.py for easy addition of new features
-- **Logging**: Comprehensive logging for monitoring and debugging
-- **Secure Configuration**: Token stored securely in configuration file
-
-### 🔗 Tool Integrations & Notifications Hub
-- **Jira Integration**: Monitors project tasks for new issues and completions
-- **GitHub Integration**: Tracks pull requests and issues across repositories
-- **Real-time Webhooks**: Instant notifications via webhook endpoints
-- **Automated Polling**: Background checks for updates at configurable intervals
-- **Discord Notifications**: Channel-specific alerts for different types of updates
-
-## Setup
-
-### Prerequisites
-
-- Python 3.8 or higher
-- A Discord bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
-
-### Installation
-
-1. **Clone or download** this repository to your local machine
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure integrations** (see Integration Setup section below)
-
-3. **Configure the bot**:
-   - Copy `config.example.py` to `config.py`
-   - Fill in your actual API tokens, channel IDs, and configuration values
-   - **Security Note**: Never commit `config.py` to version control
-
-4. **Invite the bot to your server**:
-   - Go to the Discord Developer Portal
-   - Select your application
-   - Go to the "OAuth2" section
-   - Under "Scopes", check "bot"
-   - Under "Bot Permissions", select the permissions your bot needs
-   - Copy the generated URL and use it to invite the bot to your server
-
-## Usage
-
-### 🚀 Quick Start
-
-```bash
-python alice.py
-```
-
-The bot will:
-1. **Connect to Discord** and join Atlantis E. Institute server
-2. **Start webhook server** on port 8080 for real-time notifications
-3. **Begin polling Jira** every 5 minutes for new/completed tasks
-4. **Send notifications** to #general channel for all updates
-
-### Available Commands
-
-- `!hello` - Alice introduces itself
-- `!ping` - Check bot latency
-- `!integrations` - Check status of all integrations
-- `!check` - Manually trigger integration checks (admin only)
-- `!webhook` - Get webhook endpoint URLs for configuration (admin only)
-
-### Integration Setup
-
-#### ✅ Current Configuration Status
-
-| Integration | Status | Details |
-|-------------|--------|---------|
-| **Discord** | ✅ Ready | Atlantis E. Institute server (#general channel) |
-| **Jira** | ✅ Connected | AEI project monitoring (new/completed tasks) |
-| **GitHub** | ✅ Connected | Atlantisinstitute/AtlantisEons repo (PRs/issues monitoring) |
-| **Webhooks** | ✅ Ready | Port 8080 for real-time notifications |
-
-#### ✅ Discord Channel Configuration (COMPLETED)
-- **Server**: Atlantis E. Institute
-- **Channel**: #general (ID: 1008953754273460225)
-- **Status**: ✅ Configured for all notification types
-
-#### GitHub Configuration (Optional)
-
-1. **Personal Access Token**:
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Generate new token with `repo` permissions
-   - Update `config.py`:
-
-```python
-GITHUB_CONFIG = {
-    'token': 'your-github-token-here',
-    'repos': ['AtlantisInstitute/your-repo-name'],
-}
-```
-
-2. **Webhook Setup** (Optional):
-   - Repository Settings → Webhooks
-   - Payload URL: `http://your-server:8080/webhooks/github`
-   - Content type: `application/json`
-   - Events: Pull requests, Issues
-
-#### GitHub Configuration
-
-1. **Personal Access Token**:
-   - Go to GitHub Settings → Developer settings → Personal access tokens
-   - Generate a token with `repo` permissions
-   - Update `config.py` with your token and repository list
-
-2. **Webhook Setup** (Optional - for real-time notifications):
-   - Go to your repository Settings → Webhooks
-   - Add webhook with URL: `http://your-server:8080/webhooks/github`
-   - Content type: `application/json`
-   - Events: Pull requests, Issues
-   - Set secret if configured in `config.py`
-
-#### Discord Channel Setup
-
-Update the channel IDs in `config.py` for notifications:
-- `general`: General announcements
-- `jira`: Jira-specific notifications
-- `github`: GitHub-specific notifications
-
-### Available Commands
-
-- `!hello` - Alice introduces itself
-- `!ping` - Check bot latency
-- `!integrations` - Check status of all integrations
-- `!check` - Manually trigger integration checks (admin only)
-- `!webhook` - Get webhook endpoint URLs for configuration (admin only)
-
-### Adding New Features
-
-Alice is built with a modular architecture using discord.py's commands extension. To add new commands:
-
-1. Add new command functions in `alice.py` using the `@bot.command()` decorator
-2. For complex features, consider creating separate cog files for organization
+- **Real-time webhooks** — receives GitHub, Jira, and Confluence events via Flask endpoints
+- **Commit polling** — polls GitHub every 60 seconds as a fallback for push events
+- **Discord notifications** — posts formatted messages to channel-specific Discord webhooks
+- **Deduplication** — tracks known commits, PRs, and issues to avoid duplicate notifications
+- **Health endpoint** — `GET /webhooks/health` for monitoring
 
 ## Project Structure
 
 ```
 Alice/
-├── alice.py              # Main bot file with Discord integration
-├── config.py             # Configuration (API tokens, channels, etc.)
-├── requirements.txt      # Python dependencies
-├── .gitignore            # Git ignore rules
-├── README.md             # This file
-├── jira_integration.py   # Jira API integration and monitoring
-├── github_integration.py # GitHub API integration and monitoring
-├── notification_manager.py # Discord notification system
-├── webhook_handler.py    # Webhook server for real-time updates
-└── task_scheduler.py     # Background polling scheduler
+├── .env.example              # Required environment variables
+├── pyproject.toml            # Python project metadata
+├── requirements.txt          # Dependencies
+├── SOUL.md                   # Alice personality guide
+├── AGENTS.md                 # Operational rules and guardrails
+├── TOOLS.md                  # Local environment notes
+│
+├── alice/                    # Main Python package
+│   ├── __main__.py           # Entry point: python -m alice
+│   ├── bot.py                # Orchestrator (PID, threads, signals)
+│   ├── config.py             # Env-based configuration
+│   ├── integrations/         # GitHub and Jira API clients
+│   ├── handlers/             # Flask webhook server
+│   ├── notifications/        # Discord webhook delivery
+│   └── scheduling/           # APScheduler commit polling
+│
+├── skills/                   # OpenClaw skills
+│   ├── alice-status/         # Check Alice health
+│   └── alice-notify/         # Send notification through Alice
+│
+├── openclaw/                 # Separate TypeScript project (Discord bot)
+├── tests/
+└── docs/
+    └── architecture.md       # Agent-readable architecture overview
 ```
+
+## Setup
+
+### Prerequisites
+
+- Python 3.8+
+- A Discord server with webhook URLs configured (Server Settings > Integrations > Webhooks)
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+### Configuration
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and fill in your actual values:
+   - Discord webhook URLs for each notification channel
+   - GitHub Personal Access Token with `repo` scope
+   - Jira email and API token
+   - Discord channel IDs
+
+3. **Never commit `.env`** — it is excluded by `.gitignore`.
+
+### Webhook Setup (Optional — for real-time notifications)
+
+Configure webhooks in each service to point at your Alice instance:
+
+- **GitHub**: Repository Settings > Webhooks > `https://your-host/webhooks/github`
+- **Jira**: System > Webhooks > `https://your-host/webhooks/jira`
+- **Confluence**: Administration > Webhooks > `https://your-host/webhooks/confluence`
+
+For local development, use [ngrok](https://ngrok.com/) to expose port 8080:
+```bash
+ngrok http 8080
+```
+
+## Usage
+
+```bash
+python -m alice
+```
+
+Alice will:
+1. Start the Flask webhook server on port 8080
+2. Begin polling GitHub for new commits every 60 seconds
+3. Send notifications to Discord when events are detected
+
+### Health Check
+
+```bash
+curl http://localhost:8080/webhooks/health
+```
+
+### Stopping
+
+Send `SIGTERM` or `SIGINT` (Ctrl+C). Alice cleans up her PID file and stops gracefully.
+
+## Integration Status
+
+| Integration | Method | Details |
+|---|---|---|
+| GitHub | Webhooks + Polling | PRs, issues, commits for Atlantisinstitute/AtlantisEons |
+| Jira | Webhooks | New/completed issues in project AEI |
+| Confluence | Webhooks | Page and comment events |
+| Discord | Webhook HTTP POST | Channel-specific notification delivery |
+
+## OpenClaw
+
+The `openclaw/` directory contains a separate TypeScript project — a local-first personal AI assistant that handles Discord bot gateway connections and interactive AI conversations. Alice and OpenClaw complement each other: OpenClaw handles chat, Alice handles notifications.
 
 ## Security
 
-- The bot token is stored in `config.py` which is excluded from version control
-- Never share your bot token publicly
-- Regularly rotate bot tokens for security
-
-## Development
-
-Alice is built with discord.py, a modern, easy-to-use, feature-rich, and async-ready API wrapper for Discord.
-
-### Adding Commands
-
-```python
-@bot.command(name='newcommand', help='Description of command')
-async def newcommand(ctx):
-    # Your command logic here
-    await ctx.send('Command response')
-```
-
-### Adding Event Handlers
-
-```python
-@bot.event
-async def on_event_name():
-    # Event handling logic here
-    pass
-```
-
-## Support
-
-For questions or issues with Alice, please contact the Atlantis Institute development team.
+- All secrets are stored in `.env` (excluded from version control)
+- Webhook signatures are verified when secrets are configured
+- API tokens are never logged or included in notifications
 
 ## License
 

@@ -9,12 +9,9 @@ import asyncio
 import re
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-import config
+from alice.config import GITHUB_POLL_INTERVAL
 
 logger = logging.getLogger('Alice.Scheduler')
-
-# Polling interval for GitHub commits (in seconds)
-GITHUB_POLL_INTERVAL = 60  # Check every 60 seconds
 
 
 class TaskScheduler:
@@ -29,7 +26,7 @@ class TaskScheduler:
     async def check_github_commits(self):
         """Check for new GitHub commits and send notifications."""
         try:
-            from github_integration import github_integration
+            from alice.integrations.github_integration import github_integration
 
             new_commits = github_integration.get_new_commits()
 

@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from typing import List, Dict, Optional
 from jira import JIRA
 from jira.exceptions import JIRAError
-import config
+from alice.config import JIRA_CONFIG
 
 logger = logging.getLogger('Alice.Jira')
 
@@ -37,8 +37,8 @@ class JiraIntegration:
         try:
             if not self.jira:
                 self.jira = JIRA(
-                    server=config.JIRA_CONFIG['server'],
-                    basic_auth=(config.JIRA_CONFIG['username'], config.JIRA_CONFIG['api_token'])
+                    server=JIRA_CONFIG['server'],
+                    basic_auth=(JIRA_CONFIG['username'], JIRA_CONFIG['api_token'])
                 )
             # Test connection
             self.jira.myself()
@@ -59,7 +59,7 @@ class JiraIntegration:
 
         try:
             # JQL query to find issues created or updated recently in the project
-            jql = f'project = "{config.JIRA_CONFIG["project_key"]}" AND (created > -{hours_back}h OR updated > -{hours_back}h) ORDER BY updated DESC'
+            jql = f'project = "{JIRA_CONFIG["project_key"]}" AND (created > -{hours_back}h OR updated > -{hours_back}h) ORDER BY updated DESC'
 
             issues = self.jira.search_issues(jql, maxResults=50)
 
@@ -75,7 +75,7 @@ class JiraIntegration:
                     'creator': issue.fields.creator.displayName,
                     'priority': issue.fields.priority.name if issue.fields.priority else 'Not set',
                     'type': issue.fields.issuetype.name,
-                    'url': f"{config.JIRA_CONFIG['server']}/browse/{issue.key}"
+                    'url': f"{JIRA_CONFIG['server']}/browse/{issue.key}"
                 })
 
             logger.info(f"Retrieved {len(issue_data)} recent Jira issues")
@@ -115,7 +115,7 @@ class JiraIntegration:
 
         try:
             # JQL query to find issues that transitioned to done status recently
-            jql = f'project = "{config.JIRA_CONFIG["project_key"]}" AND status CHANGED TO ("Done", "Closed", "Resolved") AFTER "{self.last_check.strftime("%Y-%m-%d %H:%M")}"'
+            jql = f'project = "{JIRA_CONFIG["project_key"]}" AND status CHANGED TO ("Done", "Closed", "Resolved") AFTER "{self.last_check.strftime("%Y-%m-%d %H:%M")}"'
 
             issues = self.jira.search_issues(jql, maxResults=50)
 
@@ -140,7 +140,7 @@ class JiraIntegration:
                         'status': issue.fields.status.name,
                         'assignee': issue.fields.assignee.displayName if issue.fields.assignee else 'Unassigned',
                         'completed_at': completion_time.isoformat(),
-                        'url': f"{config.JIRA_CONFIG['server']}/browse/{issue.key}"
+                        'url': f"{JIRA_CONFIG['server']}/browse/{issue.key}"
                     })
 
             logger.info(f"Found {len(completed_issues)} completed Jira issues")

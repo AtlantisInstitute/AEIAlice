@@ -1,0 +1,8 @@
+[project]
+name = "alice"
+version = "1.0.0"
+description = "Notification daemon for the Atlantis Institute — monitors GitHub, Jira, and Confluence and posts to Discord via webhooks."
+requires-python = ">= 3.8"
+
+[project.scripts]
+alice = "alice.bot:main"

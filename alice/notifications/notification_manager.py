@@ -9,7 +9,7 @@ import logging
 import requests
 import json
 from typing import Optional
-import config
+from alice.config import DISCORD_WEBHOOKS
 
 logger = logging.getLogger('Alice.Notifications')
 
@@ -22,7 +22,7 @@ class NotificationManager:
     def send_to_channel(self, channel_type: str, message: str, embed: Optional[dict] = None) -> bool:
         """Send a message to a Discord channel via webhook URL."""
         try:
-            webhook_url = config.DISCORD_WEBHOOKS.get(channel_type)
+            webhook_url = DISCORD_WEBHOOKS.get(channel_type)
             if not webhook_url:
                 logger.warning(f"No webhook URL configured for channel type: {channel_type}")
                 return False
@@ -60,44 +60,44 @@ class NotificationManager:
 
     def notify_jira_new_task(self, task_data: dict):
         """Send notification for new Jira task."""
-        from jira_integration import jira_integration
+        from alice.integrations.jira_integration import jira_integration
         message = jira_integration.format_issue_notification(task_data, 'new')
         return self.send_to_channel('jira', message)
 
     def notify_jira_task_completed(self, task_data: dict):
         """Send notification for completed Jira task."""
-        from jira_integration import jira_integration
+        from alice.integrations.jira_integration import jira_integration
         message = jira_integration.format_issue_notification(task_data, 'completed')
         return self.send_to_channel('jira', message)
 
     def notify_github_new_pr(self, pr_data: dict):
         """Send notification for new GitHub PR."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
         message = github_integration.format_pr_notification(pr_data, 'new')
         return self.send_to_channel('github', message)
 
     def notify_github_pr_closed(self, pr_data: dict):
         """Send notification for closed GitHub PR."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
         event_type = 'merged' if pr_data.get('merged') else 'closed'
         message = github_integration.format_pr_notification(pr_data, event_type)
         return self.send_to_channel('github', message)
 
     def notify_github_new_issue(self, issue_data: dict):
         """Send notification for new GitHub issue."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
         message = github_integration.format_issue_notification(issue_data, 'new')
         return self.send_to_channel('github', message)
 
     def notify_github_issue_closed(self, issue_data: dict):
         """Send notification for closed GitHub issue."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
         message = github_integration.format_issue_notification(issue_data, 'closed')
         return self.send_to_channel('github', message)
 
     def notify_github_new_commit(self, commit_data: dict):
         """Send notification for new GitHub commit."""
-        from github_integration import github_integration
+        from alice.integrations.github_integration import github_integration
         message = github_integration.format_commit_notification(commit_data)
         return self.send_to_channel('commits', message)
 

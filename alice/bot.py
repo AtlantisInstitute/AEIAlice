@@ -5,7 +5,7 @@ Handles GitHub, Jira, and Confluence notifications via Discord webhooks.
 AI conversations are handled by OpenClaw (separate gateway process).
 """
 
-import config
+from alice.config import WEBHOOK_CONFIG
 import logging
 import os
 import sys
@@ -16,9 +16,9 @@ import threading
 import asyncio
 
 # Import integration modules
-from notification_manager import init_notification_manager
-from webhook_handler import webhook_handler
-from task_scheduler import task_scheduler
+from alice.notifications.notification_manager import init_notification_manager
+from alice.handlers.webhook_handler import webhook_handler
+from alice.scheduling.task_scheduler import task_scheduler
 
 # Set up logging
 logging.basicConfig(
@@ -27,20 +27,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger('Alice')
 
-# PID file location
-PID_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alice.pid')
+# PID file location — stored next to the package root
+PID_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'alice.pid')
 
 
 def kill_all_alice_instances():
     """Kill all running Alice instances."""
     current_pid = os.getpid()
+    # Protect current process and its entire process tree
+    try:
+        current_process = psutil.Process(current_pid)
+        protected_pids = {current_pid, current_process.ppid()}
+        for child in current_process.children(recursive=True):
+            protected_pids.add(child.pid)
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        protected_pids = {current_pid}
+
     killed_count = 0
 
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
+            if proc.info['pid'] in protected_pids:
+                continue
             cmdline = proc.info.get('cmdline', [])
-            if cmdline and 'alice.py' in ' '.join(cmdline).lower():
-                if proc.info['pid'] != current_pid:
+            if cmdline:
+                cmdline_str = ' '.join(cmdline).lower()
+                if 'alice.py' in cmdline_str or '-m alice' in cmdline_str or 'alice.bot' in cmdline_str:
                     logger.info(f"Killing old Alice instance (PID: {proc.info['pid']})")
                     proc.kill()
                     killed_count += 1
@@ -123,7 +135,7 @@ def main():
         name="WebhookServer"
     )
     webhook_thread.start()
-    logger.info(f"Webhook server started on port {config.WEBHOOK_CONFIG['port']}")
+    logger.info(f"Webhook server started on port {WEBHOOK_CONFIG['port']}")
 
     # Setup and start task scheduler in async event loop
     loop = asyncio.new_event_loop()

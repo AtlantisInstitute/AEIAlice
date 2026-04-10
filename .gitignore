@@ -111,16 +111,20 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Discord bot configuration (contains sensitive token)
-config.py
-# Keep the example config file
-!config.example.py
+# Legacy root config with secrets (do NOT commit)
+/config.py
 
 # Alice PID file
-alice.pid
+*.pid
 
 # Launchd log
 launchd.log
 
+# Runtime state
+state/
+
 # macOS
 .DS_Store
+
+# Node (openclaw)
+node_modules/
