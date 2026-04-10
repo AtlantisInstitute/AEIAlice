@@ -1,5 +1,14 @@
 # Alice - Local Environment Notes
 
+## AtlantisEons Project (Primary Codebase)
+
+- **Local path**: `/Users/danielvargas/Documents/Unreal Projects/AtlantisEons/`
+- **GitHub**: https://github.com/AtlantisInstitute/AtlantisEons
+- **Engine**: Unreal Engine
+- **What it is**: The Atlantis Eons game — this is the main project Alice supports
+- You have full read/write access to this directory. You can read code, edit files, run git commands, build, and test.
+- When asked about "the project", "the game", or "AtlantisEons", this is what they mean.
+
 ## Discord
 
 - **Server**: Atlantis Institute
