@@ -1,0 +1,27 @@
+{
+  "name": "alice",
+  "version": "1.0.0",
+  "description": "**Alice** is the notification daemon for the Atlantis Institute development team. She monitors GitHub, Jira, and Confluence for events and sends formatted notifications to Discord channels via webhook HTTP posts.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AtlantisInstitute/AEIAlice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AtlantisInstitute/AEIAlice/issues"
+  },
+  "homepage": "https://github.com/AtlantisInstitute/AEIAlice#readme",
+  "dependencies": {
+    "@modelcontextprotocol/server-memory": "^2026.1.26"
+  }
+}

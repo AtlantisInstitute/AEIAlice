@@ -9,14 +9,24 @@
 - You have full read/write access to this directory. You can read code, edit files, run git commands, build, and test.
 - When asked about "the project", "the game", or "AtlantisEons", this is what they mean.
 
-## Memory (MCP Knowledge Graph)
+## Memory (MCP Knowledge Graphs)
 
-- **Server**: `@modelcontextprotocol/server-memory` (connected via MCP)
+Alice has two separate memory servers:
+
+### Alice's Own Memory (`memory__` tools) — READ + WRITE
 - **Storage**: `/Users/danielvargas/Documents/Alice/memory/alice-knowledge.json`
-- **Purpose**: Persistent knowledge graph about AtlantisEons — architecture, patterns, conventions, decisions
-- Use `create_entities` to store knowledge, `search_nodes` to recall it, `create_relations` to link concepts
-- Build up your knowledge about the game over time. When you learn something important about the codebase, save it to memory so you remember it in future conversations.
-- Memory persists across sessions — anything stored here is available in every future conversation.
+- **Purpose**: ALL of Alice's knowledge — AtlantisEons learnings, other projects, user preferences, everything
+- **Write all new knowledge here**, including things you learn about AtlantisEons
+
+### AtlantisEons Project Memory (`atlantiseons-memory__` tools) — READ ONLY
+- **Storage**: `/Users/danielvargas/Documents/Unreal Projects/AtlantisEons/logs-and-data/memory.jsonl`
+- **Maintained by**: Claude Code sessions in the AtlantisEons project
+- **Purpose**: The master AtlantisEons knowledge base — architecture, patterns, conventions, decisions
+- When asked about AtlantisEons, **always search this memory first** using `atlantiseons-memory__search_nodes`
+- **NEVER write to this memory.** It is read-only for you. Only Claude Code sessions update it.
+- Do NOT use `atlantiseons-memory__create_entities` or `atlantiseons-memory__create_relations`
+
+Both use `search_nodes` to recall knowledge. Only use `create_entities`/`create_relations` on your own memory (`memory__`). Memory persists across sessions.
 
 ## Discord
 
