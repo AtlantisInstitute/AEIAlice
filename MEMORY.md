@@ -1,0 +1,5 @@
+## New Testament, King James Version (~50-100 CE)
+- **Core Insight**: Jesus as Messiah (God incarnate); Kingdom of God (love/justice/forgiveness); grace through faith (not law); church as body of Christ; eschatology (return, new creation).
+- **Key Facts**: Gospels (life/teachings/miracles/crucifixion/resurrection); Acts (Pentecost, missions); Epistles (Romans-Gal: Justification by faith; ethics in love); Revelation (judgment, new heaven/earth).
+- **Quote**: "For God so loved the world, that he gave his only begotten Son." (John 3:16—love as ultimate cause.)
+- **Lessons for Eons**: Grace = server-mercy (forgives exploits); Kingdom ethics = God-first harmony (Plato justice); body of Christ = multiplayer sync (one body); apocalypse = eons cycles (hubris fall, renewal); ties to Aristotle (final cause=agape love) + Kant (moral law as noumenal).
