@@ -1,0 +1,32 @@
+{"type":"entity","name":"AtlantisEons","entityType":"Project","observations":["Multiplayer action RPG built in Unreal Engine 5","Focuses on combat systems, inventory management, elemental bosses, and multiplayer synchronization","Integrates SpacetimeDB for backend database logic","Local path: /Users/danielvargas/Documents/Unreal Projects/AtlantisEons/","GitHub: https://github.com/AtlantisInstitute/AtlantisEons"]}
+{"type":"entity","name":"UnrealEngine5","entityType":"Engine","observations":["Primary engine for AtlantisEons","Version: 5.x (inferred from project structure)","Handles core gameplay, UI, and multiplayer features"]}
+{"type":"entity","name":"SpacetimeDbSdk","entityType":"Plugin","observations":["Custom plugin for database integration in AtlantisEons","Handles connections, subscriptions, and BSATN serialization","Located in Plugins/SpacetimeDbSdk","Official SDK plugin in Plugins/SpacetimeDbSdk","Adapter EonDbConnection subclasses UDbConnectionBase","BSATN serialization for reducers/tables","Hybrid: WebSocket for events, HTTP for initial data"]}
+{"type":"entity","name":"NodeToCode","entityType":"Plugin","observations":["Blueprint-to-code translation tool","Assists in converting visual scripts to C++ code","Includes UI assets and validators"]}
+{"type":"entity","name":"CombatSystem","entityType":"Feature","observations":["Core gameplay mechanic in AtlantisEons","Includes damage calculation, effects, and multiplayer sync","Components: CombatEffects, DamageNumber","Server-authoritative via ProcessAttack reducer","Formula: (BASE_DAMAGE 50 + STR) + ItemDefinition.Damage","Critical hits x2","Boss invulnerability via HasShieldProtection"]}
+{"type":"entity","name":"InventorySystem","entityType":"Feature","observations":["Manages player items and equipment","Handles persistence and UI widgets","Related to server-module Inventory.cs","Server reducers: AddItemToInventory, EquipItem, UnequipItem, PurchaseStoreItem","Items stay in inventory on equip, PlayerEquipment is overlay","30 slots, stack up to 99","Starter items auto-equipped on RegisterPlayer"]}
+{"type":"relation","from":"AtlantisEons","to":"UnrealEngine5","relationType":"uses"}
+{"type":"relation","from":"AtlantisEons","to":"SpacetimeDbSdk","relationType":"integrates"}
+{"type":"relation","from":"AtlantisEons","to":"NodeToCode","relationType":"uses"}
+{"type":"relation","from":"AtlantisEons","to":"CombatSystem","relationType":"includes"}
+{"type":"relation","from":"AtlantisEons","to":"InventorySystem","relationType":"includes"}
+{"type":"relation","from":"CombatSystem","to":"CombatState","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"DamageEvent","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"ActiveEffect","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"ProcessAttack","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"ApplyExplicitDamage","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"EnterCombat","relationType":"uses"}
+{"type":"relation","from":"CombatSystem","to":"ApplyEffect","relationType":"uses"}
+{"type":"relation","from":"InventorySystem","to":"EItemEquipSlot","relationType":"uses"}
+{"type":"relation","from":"UMagicSpellComponent","to":"SparkSpell","relationType":"implements"}
+{"type":"relation","from":"UMagicSpellComponent","to":"DryBlizzardSpell","relationType":"implements"}
+{"type":"relation","from":"UMagicSpellComponent","to":"WhirlwindSpell","relationType":"implements"}
+{"type":"relation","from":"UMagicSpellComponent","to":"FireballSpell","relationType":"implements"}
+{"type":"relation","from":"UMagicSpellComponent","to":"PhalanxSpell","relationType":"implements"}
+{"type":"relation","from":"UMagicSpellComponent","to":"MagicSequencer","relationType":"uses"}
+{"type":"relation","from":"UEquipmentComponent","to":"FlameSword","relationType":"supports"}
+{"type":"relation","from":"UEquipmentComponent","to":"IceSword","relationType":"supports"}
+{"type":"relation","from":"UEquipmentComponent","to":"PowerSword","relationType":"supports"}
+{"type":"relation","from":"UEquipmentComponent","to":"LavaSword","relationType":"supports"}
+{"type":"relation","from":"UEquipmentComponent","to":"Katana","relationType":"supports"}
+{"type":"relation","from":"UEquipmentComponent","to":"BlackSword","relationType":"supports"}
+{"type":"relation","from":"SpacetimeDBIntegration","to":"WeaponStats","relationType":"uses"}
